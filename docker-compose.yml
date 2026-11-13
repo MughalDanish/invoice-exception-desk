@@ -1,0 +1,48 @@
+name: invoice-exception-desk
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: invoices
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d invoices"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in .env}
+      DEMO_BASIC_USER: ${DEMO_BASIC_USER:-demo}
+      DEMO_BASIC_PASSWORD: ${DEMO_BASIC_PASSWORD:?Set DEMO_BASIC_PASSWORD in .env}
+      AI_MODE: mock
+      STORAGE_DIR: /data/uploads
+      FIXTURES_DIR: /app/fixtures
+      MAX_UPLOAD_BYTES: ${MAX_UPLOAD_BYTES:-8388608}
+      CORS_ORIGINS: '["http://localhost:3000"]'
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - invoice_files:/data/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 6s
+      retries: 5
+
+volumes:
+  postgres_data:
+  invoice_files:

@@ -1,0 +1,483 @@
+{
+  "description": "Synthetic demo data; expected rules apply after extraction is built.",
+  "fixtures": {
+    "clean-001.pdf": {
+      "sha256": "298e664a695655b70e69120fccfadba9e1884bd552844c1219edd5d100ec3107",
+      "extraction": {
+        "vendor_name": "Alpha Office Supplies",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-A-001",
+        "invoice_date": "2026-11-13",
+        "due_date": "2026-11-30",
+        "currency": "USD",
+        "line_items": [
+          {
+            "description": "Office paper",
+            "quantity": "10",
+            "unit_price": "100.00",
+            "line_total": "1000.00"
+          }
+        ],
+        "subtotal": "1000.00",
+        "tax_rate": "0.15",
+        "tax_amount": "150.00",
+        "total": "1150.00",
+        "evidence": {
+          "invoice_number": "INV-A-001",
+          "total": "USD 1150.00"
+        },
+        "uncertain_fields": []
+      },
+      "expected_rule_codes": [],
+      "error_code": null
+    },
+    "clean-002.pdf": {
+      "sha256": "b1cf6f7fa916889c6e5ebd55bda1f7e20f8d4f4ac60c964ccacc9f2d7030f31f",
+      "extraction": {
+        "vendor_name": "Alpha Office Supplies",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-A-002",
+        "invoice_date": "2026-11-13",
+        "due_date": "2026-11-30",
+        "currency": "USD",
+        "line_items": [
+          {
+            "description": "Office paper",
+            "quantity": "10",
+            "unit_price": "100.00",
+            "line_total": "1000.00"
+          }
+        ],
+        "subtotal": "1000.00",
+        "tax_rate": "0.15",
+        "tax_amount": "150.00",
+        "total": "1150.00",
+        "evidence": {
+          "invoice_number": "INV-A-002",
+          "total": "USD 1150.00"
+        },
+        "uncertain_fields": []
+      },
+      "expected_rule_codes": [],
+      "error_code": null
+    },
+    "clean-003.pdf": {
+      "sha256": "ec4988b91ab72bdd3402f666820ee13bb6a47ca68fac9aed139a6648df80471f",
+      "extraction": {
+        "vendor_name": "Alpha Office Supplies",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-A-003",
+        "invoice_date": "2026-11-13",
+        "due_date": "2026-11-30",
+        "currency": "USD",
+        "line_items": [
+          {
+            "description": "Office paper",
+            "quantity": "10",
+            "unit_price": "100.00",
+            "line_total": "1000.00"
+          }
+        ],
+        "subtotal": "1000.00",
+        "tax_rate": "0.15",
+        "tax_amount": "150.00",
+        "total": "1150.00",
+        "evidence": {
+          "invoice_number": "INV-A-003",
+          "total": "USD 1150.00"
+        },
+        "uncertain_fields": []
+      },
+      "expected_rule_codes": [],
+      "error_code": null
+    },
+    "clean-004.pdf": {
+      "sha256": "611498523440ad41a992ed1244bbedd21f6402b90b74e1fea706acfc2cab3c6c",
+      "extraction": {
+        "vendor_name": "Alpha Office Supplies",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-A-004",
+        "invoice_date": "2026-11-13",
+        "due_date": "2026-11-30",
+        "currency": "USD",
+        "line_items": [
+          {
+            "description": "Office paper",
+            "quantity": "10",
+            "unit_price": "100.00",
+            "line_total": "1000.00"
+          }
+        ],
+        "subtotal": "1000.00",
+        "tax_rate": "0.15",
+        "tax_amount": "150.00",
+        "total": "1150.00",
+        "evidence": {
+          "invoice_number": "INV-A-004",
+          "total": "USD 1150.00"
+        },
+        "uncertain_fields": []
+      },
+      "expected_rule_codes": [],
+      "error_code": null
+    },
+    "clean-005.pdf": {
+      "sha256": "5bfe0fc7e45799797cb6b0b0595d8e1916dc299e729e0b1eb4bccd176a1d41c1",
+      "extraction": {
+        "vendor_name": "Alpha Office Supplies",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-A-005",
+        "invoice_date": "2026-11-13",
+        "due_date": "2026-11-30",
+        "currency": "USD",
+        "line_items": [
+          {
+            "description": "Office paper",
+            "quantity": "10",
+            "unit_price": "100.00",
+            "line_total": "1000.00"
+          }
+        ],
+        "subtotal": "1000.00",
+        "tax_rate": "0.15",
+        "tax_amount": "150.00",
+        "total": "1150.00",
+        "evidence": {
+          "invoice_number": "INV-A-005",
+          "total": "USD 1150.00"
+        },
+        "uncertain_fields": []
+      },
+      "expected_rule_codes": [],
+      "error_code": null
+    },
+    "wrong-total.pdf": {
+      "sha256": "caaf5d9708f285123840ad93cd5a6a7769da148982e3bf95edd554dd3d401f58",
+      "extraction": {
+        "vendor_name": "Beta Tech",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-B-002",
+        "invoice_date": "2026-11-13",
+        "due_date": "2026-11-30",
+        "currency": "USD",
+        "line_items": [
+          {
+            "description": "Software licenses",
+            "quantity": "10",
+            "unit_price": "200.00",
+            "line_total": "2000.00"
+          }
+        ],
+        "subtotal": "2000.00",
+        "tax_rate": "0.15",
+        "tax_amount": "300.00",
+        "total": "2500.00",
+        "evidence": {
+          "invoice_number": "INV-B-002",
+          "total": "USD 2500.00"
+        },
+        "uncertain_fields": []
+      },
+      "expected_rule_codes": [
+        "TOTAL_MISMATCH"
+      ],
+      "error_code": null
+    },
+    "wrong-line.pdf": {
+      "sha256": "403ef7c8327a604bd4edc7bc004e082697e2983ecf810eff0359d9201bb45899",
+      "extraction": {
+        "vendor_name": "Alpha Office Supplies",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-LINE-001",
+        "invoice_date": "2026-11-13",
+        "due_date": "2026-11-30",
+        "currency": "USD",
+        "line_items": [
+          {
+            "description": "Office paper",
+            "quantity": "9",
+            "unit_price": "100.00",
+            "line_total": "1000.00"
+          }
+        ],
+        "subtotal": "1000.00",
+        "tax_rate": "0.15",
+        "tax_amount": "150.00",
+        "total": "1150.00",
+        "evidence": {
+          "invoice_number": "INV-LINE-001",
+          "total": "USD 1150.00"
+        },
+        "uncertain_fields": []
+      },
+      "expected_rule_codes": [
+        "LINE_TOTAL_MISMATCH"
+      ],
+      "error_code": null
+    },
+    "wrong-tax.pdf": {
+      "sha256": "409aebe27e3ee5f37af2e72827cac95ce783da77f3c6a6fb04e1057657408d1d",
+      "extraction": {
+        "vendor_name": "Alpha Office Supplies",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-TAX-001",
+        "invoice_date": "2026-11-13",
+        "due_date": "2026-11-30",
+        "currency": "USD",
+        "line_items": [
+          {
+            "description": "Office paper",
+            "quantity": "10",
+            "unit_price": "100.00",
+            "line_total": "1000.00"
+          }
+        ],
+        "subtotal": "1000.00",
+        "tax_rate": "0.10",
+        "tax_amount": "150.00",
+        "total": "1150.00",
+        "evidence": {
+          "invoice_number": "INV-TAX-001",
+          "total": "USD 1150.00"
+        },
+        "uncertain_fields": []
+      },
+      "expected_rule_codes": [
+        "TAX_RATE_MISMATCH"
+      ],
+      "error_code": null
+    },
+    "duplicate-copy.pdf": {
+      "sha256": "298e664a695655b70e69120fccfadba9e1884bd552844c1219edd5d100ec3107",
+      "extraction": {
+        "vendor_name": "Alpha Office Supplies",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-A-001",
+        "invoice_date": "2026-11-13",
+        "due_date": "2026-11-30",
+        "currency": "USD",
+        "line_items": [
+          {
+            "description": "Office paper",
+            "quantity": "10",
+            "unit_price": "100.00",
+            "line_total": "1000.00"
+          }
+        ],
+        "subtotal": "1000.00",
+        "tax_rate": "0.15",
+        "tax_amount": "150.00",
+        "total": "1150.00",
+        "evidence": {
+          "invoice_number": "INV-A-001",
+          "total": "USD 1150.00"
+        },
+        "uncertain_fields": []
+      },
+      "expected_rule_codes": [
+        "DUPLICATE_FILE"
+      ],
+      "error_code": null
+    },
+    "duplicate-resend.pdf": {
+      "sha256": "39fa344a0c380f711ccc16e533f760734b0f0698a34ed205102c0775e3dfc7e0",
+      "extraction": {
+        "vendor_name": "Alpha Office Supplies",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-A-001",
+        "invoice_date": "2026-11-13",
+        "due_date": "2026-11-30",
+        "currency": "USD",
+        "line_items": [
+          {
+            "description": "Office paper",
+            "quantity": "10",
+            "unit_price": "100.00",
+            "line_total": "1000.00"
+          }
+        ],
+        "subtotal": "1000.00",
+        "tax_rate": "0.15",
+        "tax_amount": "150.00",
+        "total": "1150.00",
+        "evidence": {
+          "invoice_number": "INV-A-001",
+          "total": "USD 1150.00"
+        },
+        "uncertain_fields": []
+      },
+      "expected_rule_codes": [
+        "DUPLICATE_INVOICE"
+      ],
+      "error_code": null
+    },
+    "duplicate-altered.pdf": {
+      "sha256": "9687f513b5a4946b318618e3aece20885864d4fb8cc14123628b42879d87d994",
+      "extraction": {
+        "vendor_name": "Alpha Office Supplies",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-A-001",
+        "invoice_date": "2026-11-13",
+        "due_date": "2026-11-30",
+        "currency": "USD",
+        "line_items": [
+          {
+            "description": "Office paper",
+            "quantity": "10",
+            "unit_price": "200.00",
+            "line_total": "2000.00"
+          }
+        ],
+        "subtotal": "2000.00",
+        "tax_rate": "0.15",
+        "tax_amount": "300.00",
+        "total": "2300.00",
+        "evidence": {
+          "invoice_number": "INV-A-001",
+          "total": "USD 2300.00"
+        },
+        "uncertain_fields": []
+      },
+      "expected_rule_codes": [
+        "DUPLICATE_INVOICE"
+      ],
+      "error_code": null
+    },
+    "unknown-vendor-1.pdf": {
+      "sha256": "73de8dc6f54687bf8e335d8f84e7f94dcf9f9ba1482458458845a535ed0a1a40",
+      "extraction": {
+        "vendor_name": "Unregistered Supplier 1",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-U-1",
+        "invoice_date": "2026-11-13",
+        "due_date": "2026-11-30",
+        "currency": "USD",
+        "line_items": [
+          {
+            "description": "Office paper",
+            "quantity": "10",
+            "unit_price": "100.00",
+            "line_total": "1000.00"
+          }
+        ],
+        "subtotal": "1000.00",
+        "tax_rate": "0.15",
+        "tax_amount": "150.00",
+        "total": "1150.00",
+        "evidence": {
+          "invoice_number": "INV-U-1",
+          "total": "USD 1150.00"
+        },
+        "uncertain_fields": []
+      },
+      "expected_rule_codes": [
+        "UNAPPROVED_VENDOR"
+      ],
+      "error_code": null
+    },
+    "unknown-vendor-2.pdf": {
+      "sha256": "958b97047c8063ca299c141b207cf2361bec5e63ff5721305e7282534b66f2ea",
+      "extraction": {
+        "vendor_name": "Unregistered Supplier 2",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-U-2",
+        "invoice_date": "2026-11-13",
+        "due_date": "2026-11-30",
+        "currency": "USD",
+        "line_items": [
+          {
+            "description": "Office paper",
+            "quantity": "10",
+            "unit_price": "100.00",
+            "line_total": "1000.00"
+          }
+        ],
+        "subtotal": "1000.00",
+        "tax_rate": "0.15",
+        "tax_amount": "150.00",
+        "total": "1150.00",
+        "evidence": {
+          "invoice_number": "INV-U-2",
+          "total": "USD 1150.00"
+        },
+        "uncertain_fields": []
+      },
+      "expected_rule_codes": [
+        "UNAPPROVED_VENDOR"
+      ],
+      "error_code": null
+    },
+    "missing-invoice_number.pdf": {
+      "sha256": "5f62d57a95ac1093dab7f7c7a3e5f6413b380f609613dfc7a0270e29b19cfcb8",
+      "extraction": {
+        "vendor_name": "Alpha Office Supplies",
+        "vendor_tax_id": null,
+        "invoice_number": null,
+        "invoice_date": "2026-11-13",
+        "due_date": "2026-11-30",
+        "currency": "USD",
+        "line_items": [
+          {
+            "description": "Office paper",
+            "quantity": "10",
+            "unit_price": "100.00",
+            "line_total": "1000.00"
+          }
+        ],
+        "subtotal": "1000.00",
+        "tax_rate": "0.15",
+        "tax_amount": "150.00",
+        "total": "1150.00",
+        "evidence": {
+          "invoice_number": "",
+          "total": "USD 1150.00"
+        },
+        "uncertain_fields": []
+      },
+      "expected_rule_codes": [
+        "MISSING_REQUIRED_FIELD"
+      ],
+      "error_code": null
+    },
+    "missing-invoice_date.pdf": {
+      "sha256": "896e894876e520d48d22d1959e6d81f966745b6766cb4947270721dcb689cf4c",
+      "extraction": {
+        "vendor_name": "Alpha Office Supplies",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-MISSING-invoice_date",
+        "invoice_date": null,
+        "due_date": "2026-11-30",
+        "currency": "USD",
+        "line_items": [
+          {
+            "description": "Office paper",
+            "quantity": "10",
+            "unit_price": "100.00",
+            "line_total": "1000.00"
+          }
+        ],
+        "subtotal": "1000.00",
+        "tax_rate": "0.15",
+        "tax_amount": "150.00",
+        "total": "1150.00",
+        "evidence": {
+          "invoice_number": "INV-MISSING-invoice_date",
+          "total": "USD 1150.00"
+        },
+        "uncertain_fields": []
+      },
+      "expected_rule_codes": [
+        "MISSING_REQUIRED_FIELD"
+      ],
+      "error_code": null
+    },
+    "extraction-failure.pdf": {
+      "sha256": "388c1bf30657e05ac5667a4aacdb277a95f1626e095d10e707c4715964b3636f",
+      "extraction": null,
+      "expected_rule_codes": [
+        "EXTRACTION_FAILED"
+      ],
+      "error_code": "MOCK_EXTRACTION_FAILED"
+    }
+  }
+}
