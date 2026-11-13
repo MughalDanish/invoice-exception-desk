@@ -16,7 +16,9 @@ npm.cmd run dev
 Open http://localhost:3000, then enter `DEMO_BASIC_USER` and
 `DEMO_BASIC_PASSWORD` from the root ignored `.env`. Credentials remain in React
 memory; reload/sign out clears the session. Every tab signs in independently.
-Use localhost (the configured CORS origin), rather than a LAN IP.
+Both localhost:3000 and 127.0.0.1:3000 are allowed local origins. Other frontend
+origins require an explicit `CORS_ORIGINS` entry in the root `.env`; Compose passes
+that setting to the backend. Recreate the backend after changing it.
 
 For Docker, from the repository root:
 

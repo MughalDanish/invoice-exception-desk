@@ -35,7 +35,7 @@ services:
       STORAGE_DIR: /data/uploads
       FIXTURES_DIR: /app/fixtures
       MAX_UPLOAD_BYTES: ${MAX_UPLOAD_BYTES:-8388608}
-      CORS_ORIGINS: '["http://localhost:3000"]'
+      CORS_ORIGINS: '${CORS_ORIGINS:-["http://localhost:3000","http://127.0.0.1:3000"]}'
     ports:
       - "127.0.0.1:8000:8000"
     volumes:

@@ -2,6 +2,16 @@
 
 Implemented locally on `feature/invoice-exception-desk`.
 
+## Follow-up: login through the numeric loopback address
+
+Opening `http://127.0.0.1:3000` initially failed because CORS allowed only
+`http://localhost:3000`. API logs showed rejected OPTIONS requests while health
+remained successful. Both explicit local origins are now allowed by default;
+Compose also honors the configured `CORS_ORIGINS` instead of hardcoding one.
+The local ignored environment was updated and the backend recreated. Both CORS
+regression cases passed, and real Chromium login/data/detail/mobile checks passed
+through both addresses. Untrusted origins remain rejected.
+
 ## Delivered
 
 - `frontend/src/`: Next.js / TypeScript / Tailwind dashboard with authenticated

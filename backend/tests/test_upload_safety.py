@@ -132,12 +132,14 @@ def test_authenticated_openapi(client):
     assert "/api/v1/invoices/upload" in result.json()["paths"]
 
 
-def test_cors_only_allows_local_frontend(client):
+@pytest.mark.parametrize("origin", ["http://localhost:3000", "http://127.0.0.1:3000"])
+def test_cors_only_allows_local_frontend(client, origin):
     good = client.options(
         "/api/v1/invoices",
         headers={
-            "Origin": "http://localhost:3000",
+            "Origin": origin,
             "Access-Control-Request-Method": "GET",
+            "Access-Control-Request-Headers": "authorization",
         },
     )
     bad = client.options(
@@ -147,7 +149,9 @@ def test_cors_only_allows_local_frontend(client):
             "Access-Control-Request-Method": "GET",
         },
     )
-    assert good.headers["access-control-allow-origin"] == "http://localhost:3000"
+    assert good.status_code == 200
+    assert good.headers["access-control-allow-origin"] == origin
+    assert bad.status_code == 400
     assert "access-control-allow-origin" not in bad.headers
 
 

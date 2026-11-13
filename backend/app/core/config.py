@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     storage_dir: Path = Path("storage/uploads")
     fixtures_dir: Path = Path(__file__).resolve().parents[3] / "fixtures"
     max_upload_bytes: int = Field(default=8 * 1024 * 1024, ge=1, le=8 * 1024 * 1024)
-    cors_origins: list[str] = ["http://localhost:3000"]
+    cors_origins: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
 
     @model_validator(mode="after")
     def require_credentials(self):

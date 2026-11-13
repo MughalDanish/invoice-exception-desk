@@ -8,7 +8,7 @@ const browser = await chromium.launch();
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
   const errors = []; page.on("pageerror", e => errors.push(e.message));
-  await page.goto("http://localhost:3000");
+  await page.goto(process.env.DASHBOARD_URL || "http://localhost:3000");
   await page.getByLabel("Username", { exact: true }).fill(env.DEMO_BASIC_USER);
   await page.getByLabel("Password", { exact: true }).fill(env.DEMO_BASIC_PASSWORD);
   await page.getByRole("button", { name: "Open workspace" }).click();
