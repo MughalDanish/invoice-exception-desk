@@ -18,6 +18,7 @@ class InvoiceSummary(BaseModel):
     byte_size: int
     status: InvoiceStatus
     revision: int
+    review_required: bool
     vendor_id: uuid.UUID | None
     created_at: datetime
     updated_at: datetime
@@ -27,6 +28,15 @@ class InvoiceDetail(InvoiceSummary):
     extracted_data: dict | None
     current_data: dict | None
     validations: list[dict]
+    processing_attempts: list[dict]
+
+
+class ProcessingResult(BaseModel):
+    invoice_id: uuid.UUID
+    status: InvoiceStatus
+    revision: int
+    attempt_id: uuid.UUID | None
+    error_code: str | None
 
 
 class InvoicePage(BaseModel):

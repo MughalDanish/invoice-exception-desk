@@ -54,3 +54,36 @@ Official implementation references:
 - [FastAPI file uploads](https://fastapi.tiangolo.com/tutorial/request-files/)
 - [FastAPI HTTP Basic](https://fastapi.tiangolo.com/advanced/security/http-basic-auth/)
 - [SQLAlchemy 2 PostgreSQL dialect](https://docs.sqlalchemy.org/en/20/dialects/postgresql.html)
+
+## Day 2: extraction and validation
+
+The `Extractor` protocol has deterministic mock and optional Gemini implementations.
+The mock matches source bytes by hash against the answer key. The Gemini adapter
+uses the official SDK with an explicit fixed-object provider schema: the SDK rejects
+arbitrary-map `additionalProperties` in its legacy response-schema path. All numeric
+provider fields are strings. A separate strict Pydantic model validates the response
+again, rejects unknown actions, floats, non-finite money, and oversized values.
+The real SDK request transformation is exercised with an offline HTTP transport;
+this is not a live-model accuracy test.
+
+Processing claims an invoice under a row lock and commits `EXTRACTING` plus a
+RUNNING attempt. It then releases the transaction for document/model I/O. Another
+request observes the running attempt. Completion locks the invoice again and
+refreshes cached ORM objects before checking ownership, preventing an expired worker
+from overwriting a newer attempt. Explicit retries reclaim an interrupted attempt
+after a two-minute lease. No periodic worker or automatic crash recovery exists yet.
+
+Validation completion locks a normalized supplier/invoice fingerprint with a
+transaction advisory lock, checks supplier policies and duplicates, records rules,
+and stores parsed data with the resulting state in the same transaction. Exact
+file deduplication remains enforced independently at ingestion. The migration adds
+normalized identity columns, sticky human-review state, and processing-attempt history
+without changing existing invoice IDs or file paths. The health endpoint requires
+the current migration revision.
+
+Day 2 stops at READY_TO_POST / NEEDS_REVIEW / EXTRACTION_FAILED. Day 3 will implement
+corrections, revision-aware review, and transactional posting with fresh validation;
+stored rule results alone must never authorize posting. The currency and arithmetic
+limits, retry behavior, and live Gemini configuration are documented in the README.
+
+- [Official Google Gen AI SDK](https://github.com/googleapis/python-genai)

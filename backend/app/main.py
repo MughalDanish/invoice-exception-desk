@@ -28,7 +28,7 @@ def create_app(settings: Settings | None = None, engine=None) -> FastAPI:
 
     app = FastAPI(
         title="Invoice Exception Desk",
-        version="0.1.0",
+        version="0.2.0",
         lifespan=lifespan,
         docs_url=None,
         redoc_url=None,
@@ -84,7 +84,11 @@ def create_app(settings: Settings | None = None, engine=None) -> FastAPI:
 
     @app.get("/health")
     def health(session: Db):
-        session.execute(text("SELECT 1 FROM alembic_version LIMIT 1"))
+        revision = session.scalar(text("SELECT version_num FROM alembic_version"))
+        if revision != "0002_processing":
+            raise AppError(
+                503, "MIGRATIONS_REQUIRED", "Apply database migrations before using this backend"
+            )
         return {"status": "ok", "database": "ready", "ai_mode": settings.ai_mode}
 
     @app.get("/openapi.json", dependencies=[Depends(require_operator)], include_in_schema=False)

@@ -1,3 +1,4 @@
+from decimal import Decimal
 from pathlib import Path
 from typing import Literal
 
@@ -12,6 +13,9 @@ class Settings(BaseSettings):
     ai_mode: Literal["mock", "gemini"] = "mock"
     gemini_api_key: SecretStr = SecretStr("")
     gemini_model: str = ""
+    gemini_timeout_seconds: int = Field(default=10, ge=1, le=15)
+    gemini_max_attempts: int = Field(default=3, ge=1, le=3)
+    money_tolerance: Decimal = Field(default=Decimal("0.01"), ge=0, le=Decimal("0.01"))
     demo_basic_user: str = "demo"
     demo_basic_password: SecretStr = SecretStr("")
     n8n_integration_key: SecretStr = SecretStr("")

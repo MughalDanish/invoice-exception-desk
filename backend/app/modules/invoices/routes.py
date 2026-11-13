@@ -3,18 +3,28 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, Query, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
 from app.core.auth import require_operator
-from app.db.models import AuditEvent, Invoice, InvoiceStatus, ValidationResult, Vendor
+from app.db.models import (
+    AuditEvent,
+    Invoice,
+    InvoiceStatus,
+    ProcessingAttempt,
+    ValidationResult,
+    Vendor,
+)
 from app.db.session import get_session
+from app.modules.extraction.adapters import Extractor, get_extractor
+from app.modules.extraction.processing import process_invoice
 from app.modules.invoices.schemas import (
     AuditSummary,
     InvoiceDetail,
     InvoicePage,
     InvoiceSummary,
+    ProcessingResult,
     UploadResult,
     VendorSummary,
 )
@@ -66,7 +76,13 @@ def list_invoices(
         conditions.append(Invoice.status == status)
     if search:
         # Search characters such as % and _ are literal, not SQL wildcards.
-        conditions.append(Invoice.filename.icontains(search, autoescape=True))
+        conditions.append(
+            or_(
+                Invoice.filename.icontains(search, autoescape=True),
+                Invoice.current_data["vendor_name"].astext.icontains(search, autoescape=True),
+                Invoice.current_data["invoice_number"].astext.icontains(search, autoescape=True),
+            )
+        )
     total = session.scalar(select(func.count()).select_from(Invoice).where(*conditions))
     invoices = session.scalars(
         select(Invoice)
@@ -98,6 +114,21 @@ def detail(invoice_id: uuid.UUID, session: Db):
         **InvoiceSummary.model_validate(invoice).model_dump(),
         extracted_data=invoice.extracted_data,
         current_data=invoice.current_data,
+        processing_attempts=[
+            {
+                "id": str(attempt.id),
+                "ordinal": attempt.ordinal,
+                "status": attempt.status.value,
+                "created_at": attempt.created_at,
+                "finished_at": attempt.finished_at,
+                "error_code": attempt.error_code,
+            }
+            for attempt in session.scalars(
+                select(ProcessingAttempt)
+                .where(ProcessingAttempt.invoice_id == invoice.id)
+                .order_by(ProcessingAttempt.ordinal)
+            ).all()
+        ],
         validations=[
             {
                 "rule_code": row.rule_code,
@@ -109,6 +140,32 @@ def detail(invoice_id: uuid.UUID, session: Db):
             }
             for row in rules
         ],
+    )
+
+
+@router.post("/invoices/{invoice_id}/process", response_model=ProcessingResult)
+def process(
+    invoice_id: uuid.UUID,
+    request: Request,
+    session: Db,
+    actor: Operator,
+    extractor: Annotated[Extractor, Depends(get_extractor)],
+    retry: bool = False,
+):
+    invoice, attempt = process_invoice(
+        session,
+        invoice_id,
+        request.app.state.settings,
+        extractor,
+        actor,
+        retry,
+    )
+    return ProcessingResult(
+        invoice_id=invoice.id,
+        status=invoice.status,
+        revision=invoice.revision,
+        attempt_id=attempt.id if attempt else None,
+        error_code=attempt.error_code if attempt else None,
     )
 
 

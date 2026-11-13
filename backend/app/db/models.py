@@ -52,6 +52,12 @@ class Decision(enum.StrEnum):
     REJECT = "REJECT"
 
 
+class AttemptStatus(enum.StrEnum):
+    RUNNING = "RUNNING"
+    SUCCEEDED = "SUCCEEDED"
+    FAILED = "FAILED"
+
+
 def enum_type(cls):
     return Enum(cls, name=cls.__name__.lower(), native_enum=False, create_constraint=True)
 
@@ -86,6 +92,9 @@ class Invoice(IdentityMixin, Base):
         CheckConstraint("revision >= 1", name="positive_revision"),
         CheckConstraint("byte_size > 0", name="positive_size"),
         Index("ix_invoices_status_created_at", "status", "created_at"),
+        Index(
+            "ix_invoices_business_identity", "normalized_vendor_name", "normalized_invoice_number"
+        ),
     )
 
     source: Mapped[Source] = mapped_column(enum_type(Source))
@@ -101,6 +110,11 @@ class Invoice(IdentityMixin, Base):
     extracted_data: Mapped[dict | None] = mapped_column(JSONB)
     current_data: Mapped[dict | None] = mapped_column(JSONB)
     revision: Mapped[int] = mapped_column(Integer, default=1)
+    normalized_vendor_name: Mapped[str | None] = mapped_column(String(200))
+    normalized_invoice_number: Mapped[str | None] = mapped_column(String(200))
+    review_required: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default=text("false")
+    )
     vendor_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("vendors.id"))
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
@@ -153,3 +167,17 @@ class AuditEvent(IdentityMixin, Base):
     actor: Mapped[str] = mapped_column(String(200))
     event_type: Mapped[str] = mapped_column(String(80))
     details: Mapped[dict] = mapped_column(JSONB, default=dict)
+
+
+class ProcessingAttempt(IdentityMixin, Base):
+    __tablename__ = "processing_attempts"
+    __table_args__ = (
+        UniqueConstraint("invoice_id", "ordinal"),
+        CheckConstraint("ordinal >= 1", name="positive_ordinal"),
+    )
+
+    invoice_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("invoices.id"), index=True)
+    ordinal: Mapped[int] = mapped_column(Integer)
+    status: Mapped[AttemptStatus] = mapped_column(enum_type(AttemptStatus))
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    error_code: Mapped[str | None] = mapped_column(String(80))

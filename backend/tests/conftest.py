@@ -23,6 +23,9 @@ def settings(tmp_path):
         demo_basic_password=AUTH[1],
         storage_dir=tmp_path / "uploads",
         fixtures_dir=ROOT / "fixtures",
+        ai_mode="mock",
+        gemini_api_key="",
+        gemini_model="",
     )
 
 
