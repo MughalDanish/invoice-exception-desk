@@ -25,6 +25,7 @@ services:
       DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in .env}
       DEMO_BASIC_USER: ${DEMO_BASIC_USER:-demo}
       DEMO_BASIC_PASSWORD: ${DEMO_BASIC_PASSWORD:?Set DEMO_BASIC_PASSWORD in .env}
+      N8N_INTEGRATION_KEY: ${N8N_INTEGRATION_KEY:?Set N8N_INTEGRATION_KEY in .env}
       AI_MODE: ${AI_MODE:-mock}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       GEMINI_MODEL: ${GEMINI_MODEL:-}
@@ -48,6 +49,43 @@ services:
       timeout: 6s
       retries: 5
 
+  frontend:
+    profiles: [dashboard]
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+    ports:
+      - "127.0.0.1:3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  n8n:
+    profiles: [automation]
+    image: docker.n8n.io/n8nio/n8n:2.46.6
+    ports:
+      - "127.0.0.1:5678:5678"
+    environment:
+      N8N_HOST: localhost
+      N8N_PORT: 5678
+      N8N_PROTOCOL: http
+      N8N_SECURE_COOKIE: "false"
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
+      EXECUTIONS_DATA_SAVE_ON_ERROR: none
+      EXECUTIONS_DATA_SAVE_ON_SUCCESS: none
+      EXECUTIONS_DATA_SAVE_MANUAL_EXECUTIONS: "false"
+      N8N_PAYLOAD_SIZE_MAX: 9
+      GENERIC_TIMEZONE: UTC
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n/workflows:/workflows:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+
 volumes:
   postgres_data:
   invoice_files:
+  n8n_data:

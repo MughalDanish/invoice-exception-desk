@@ -3,8 +3,8 @@
 Catch invoice mistakes before they reach your ledger.
 
 An invoice exception-management demonstration using synthetic invoices.
-Days 1–3 implement ingestion, extraction, validation, human review, safe ledger posting,
-audit history, and CSV export. The dashboard is the next milestone.
+Days 1–4 implement ingestion, extraction, validation, human review, safe ledger posting,
+audit history, CSV export, the dashboard and optional local n8n intake.
 
 ## Stack
 
@@ -29,10 +29,14 @@ rejection, transactional posting with fresh validation and database uniqueness,
 immutable ledger snapshots, supplier registration, ledger pagination, sanitized CSV,
 and per-currency dashboard statistics. Posted and rejected invoices are terminal.
 
-Pending: Next.js dashboard and n8n workflows (Day 4), portfolio deployment and QA
-(Day 5). Gemini's request construction and
+Day 4 adds an authenticated Next.js / TypeScript / Tailwind dashboard, protected
+document preview, exception review, supplier registration, ledger and audit screens,
+plus a separate integration-key intake endpoint with durable delivery receipts and
+an importable n8n workflow. The static export supports future static hosting.
+
+Pending: portfolio deployment and broader QA (Day 5). Gemini's request construction and
 failure handling are tested offline with the real SDK and a fake HTTP transport;
-live extraction has not been verified. Gmail, Telegram, and n8n are not connected.
+live extraction has not been verified. Gmail and Telegram require account credentials.
 
 The initial commit is local. GitHub rejected the stored credential; the owner
 authorized continuing locally and deferring publication until access is restored.
@@ -56,9 +60,24 @@ to `.env`, replace all `CHANGE_ME` values, and use the same database password in
 `POSTGRES_PASSWORD` and `DATABASE_URL` (URL-encode special characters).
 
 Open http://localhost:8000/docs and sign in with the operator credentials in your
-local `.env`. `GET /health` is public; all other routes, including API docs and
+local `.env`. `GET /health` is public; operator routes, including API docs and
 original files, require HTTP Basic. Compose publishes only localhost ports.
 Health readiness becomes successful after migrations have run.
+
+Start the dashboard after migration:
+
+```powershell
+docker compose --profile dashboard up -d --build frontend
+```
+
+Open http://localhost:3000 and sign in with the same local operator credentials.
+The dashboard keeps credentials in tab memory and clears them on reload/sign-out.
+Use synthetic fixtures for mock extraction. It works with n8n stopped.
+For fast frontend development, run `npm.cmd ci` and `npm.cmd run dev` in `frontend/`.
+See [frontend setup and browser tests](frontend/README.md).
+
+Optional automation: [n8n setup, credentials and smoke test](n8n/README.md).
+Neither the integration key nor the workflow can approve or post invoices.
 
 PostgreSQL uses a named volume and port **5433** on the host; the backend connects
 to `postgres:5432` within Compose. Private files use a separate named volume.
@@ -144,8 +163,9 @@ with `python scripts/generate_fixtures.py` (standard library only).
 | --- | --- |
 | `GET /health` | Database/migration readiness |
 | `POST /api/v1/invoices/upload` | Validate and ingest multipart `file` |
+| `POST /api/v1/integrations/n8n/invoices` | Separate integration key, durable idempotency key, upload and processing |
 | `POST /api/v1/invoices/{id}/process` | Extract, validate, and persist results; `?retry=true` retries failures |
-| `GET /api/v1/invoices` | Filter by status, filename/vendor/invoice-number search, page and limit |
+| `GET /api/v1/invoices` | Filter by status/current issue, filename/vendor/invoice-number search, page and limit |
 | `GET /api/v1/invoices/{id}` | Metadata, current payload and validations |
 | `GET /api/v1/invoices/{id}/file` | Authenticated original attachment |
 | `GET /api/v1/invoices/{id}/audit` | Append-only event history |
@@ -314,17 +334,20 @@ that disagree with the document; approval records a human decision, not authenti
 ## Limits
 
 Synthetic local demonstration only. No public dashboard or public write endpoints
-are deployed. Basic auth is for the local operator. Windows filesystem permissions
+are deployed. Basic auth is for the local operator. Integration intake instead requires
+`X-Integration-Key` and `Idempotency-Key`; all operator routes retain Basic auth.
+Windows filesystem permissions
 inherit from the local account; POSIX modes also restrict files in Linux containers.
 Normal DB failures clean up new files; crash recovery for orphaned files is pending.
 Database triggers protect audit, review, and ledger rows against ordinary UPDATE/
 DELETE, not an administrator changing the schema. No malware scanning, payments,
-or ERP integration is provided. The API/OpenAPI interface is available now; the
-Next.js dashboard is not built yet.
+or ERP integration is provided. The dashboard is local and writable only after
+operator authentication. Public read-only access is a Day 5 task; do not publish
+this local configuration as an anonymous public demo.
 
 See [architecture](docs/architecture.md) for decisions and
 [Day 1 progress](docs/day-1-progress.md), [Day 2 progress](docs/day-2-progress.md),
-and [Day 3 progress](docs/day-3-progress.md)
+and [Day 3 progress](docs/day-3-progress.md), [Day 4 progress](docs/day-4-progress.md)
 for actually executed checks.
 
 ## Layout

@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.db.models import InvoiceStatus, Source
 
@@ -24,11 +24,12 @@ class InvoiceSummary(BaseModel):
     vendor_id: uuid.UUID | None
     created_at: datetime
     updated_at: datetime
+    current_data: dict | None
+    issue_codes: list[str] = Field(default_factory=list)
 
 
 class InvoiceDetail(InvoiceSummary):
     extracted_data: dict | None
-    current_data: dict | None
     validations: list[dict]
     processing_attempts: list[dict]
     reviews: list[dict]

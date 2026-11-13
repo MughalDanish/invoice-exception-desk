@@ -1,20 +1,21 @@
-# Architecture and Day 1 decisions
+# Architecture and milestone decisions
 
 FastAPI is a modular monolith. PostgreSQL owns application state. Private files
 are stored under UUID names on a dedicated local directory/volume. The dashboard
-and integrations will call the API; no integration will own business rules.
+and integrations call the API; no integration owns business rules.
 
 ```mermaid
 flowchart LR
-  Operator -->|HTTP Basic + upload| API[FastAPI]
+  Operator --> Web[Next.js static dashboard]
+  Web -->|HTTP Basic + upload/review| API[FastAPI]
+  Intake[Optional local n8n] -->|Integration key + delivery identity| API
   API --> PG[(PostgreSQL 16)]
   API --> Files[Private invoice volume]
   Seed[Synthetic fixture CLI] --> PG
   Seed --> Files
 ```
 
-Day 1 implements ingestion and read APIs only. There is no extraction, approval,
-or posting path yet. All accepted invoices stay `RECEIVED`, with revision 1.
+Day 1 established ingestion and read APIs. Accepted invoices start `RECEIVED`, with revision 1.
 Validation, review and ledger tables establish the schema for later milestones;
 their presence does not imply those features work.
 
@@ -123,3 +124,30 @@ not an ERP posting or payment.
 
 - [SQLAlchemy transaction management](https://docs.sqlalchemy.org/en/20/orm/session_transaction.html)
 - [SQLAlchemy PostgreSQL dialect](https://docs.sqlalchemy.org/en/20/dialects/postgresql.html)
+
+## Day 4: dashboard and intake
+
+The Next.js App Router frontend exports static pages. Runtime invoice IDs use
+`/invoices/detail/?id=UUID` so client-side details work on static hosting without
+pre-generating arbitrary invoice paths. A protected API file fetch creates a
+short-lived blob URL for previews, revoked when the view unmounts. Credentials
+stay in tab memory. Browser money values remain decimal strings; FastAPI remains
+the sole authority for revision checks, validation, review and ledger writes.
+
+Invoice lists use current-batch issue filters and a batched issue-code query.
+Statistics expose current duplicate failures and a short activity list without
+audit payloads. Detail history retains the complete protected before/after audit.
+
+Integration intake is a separate router guarded by `X-Integration-Key`; it cannot
+call operator actions. A transaction advisory lock on a hashed delivery identity
+precedes the file-hash lock. A receipt links that identity to file SHA and invoice
+ID, including cases where the file originally came from the dashboard. Receipts
+and new invoice metadata commit together; changed bytes under a used key conflict.
+Processing happens after that commit using the existing bounded extractor and
+attempt ownership logic. Repeated delivery never changes reviewed/terminal data.
+
+n8n is optional local orchestration. The exported workflow validates one attachment,
+sends multipart data with bounded retries, then emits a safe result. Gmail and
+Telegram nodes are disabled until account credentials are configured. The CLI
+fixture smoke exercises the actual exported guard, HTTP and result nodes without
+external accounts. It cannot approve or post an invoice.

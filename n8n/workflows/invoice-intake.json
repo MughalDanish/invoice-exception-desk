@@ -1,0 +1,271 @@
+{
+  "id": "invoice-desk-intake",
+  "name": "Invoice Desk - authenticated intake",
+  "active": false,
+  "nodes": [
+    {
+      "id": "fixture-webhook",
+      "name": "Fixture webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "invoice-intake",
+        "authentication": "headerAuth",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "webhookId": "invoice-desk-fixture-intake"
+    },
+    {
+      "id": "gmail-ap-demo",
+      "name": "Gmail AP-DEMO",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        220
+      ],
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "labelIds": [
+            "REPLACE_WITH_AP_DEMO_LABEL_ID"
+          ]
+        },
+        "options": {
+          "downloadAttachments": true
+        }
+      },
+      "disabled": true
+    },
+    {
+      "id": "validate-one-attachment",
+      "name": "Validate one attachment",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        250,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const items = $input.all();\nif (items.length !== 1) throw new Error('ONE_ATTACHMENT_REQUIRED');\nconst item = items[0];\nconst keys = Object.keys(item.binary || {});\nif (keys.length !== 1) throw new Error('ONE_ATTACHMENT_REQUIRED');\nconst key = keys[0], file = item.binary[key];\nconst mime = file.mimeType;\nif (!['application/pdf', 'image/jpeg', 'image/png'].includes(mime)) throw new Error('UNSUPPORTED_ATTACHMENT');\nif (!/\\.(pdf|jpe?g|png)$/i.test(file.fileName || '')) throw new Error('UNSUPPORTED_ATTACHMENT');\nconst bytes = await this.helpers.getBinaryDataBuffer(0, key);\nif (!bytes.length || bytes.length > 8388608) throw new Error('ATTACHMENT_SIZE_INVALID');\nconst messageId = item.json.id || item.json.headers?.['x-delivery-id'];\nif (typeof messageId !== 'string' || !/^[A-Za-z0-9._:@/-]{1,230}$/.test(messageId)) throw new Error('DELIVERY_ID_REQUIRED');\nreturn [{json: {deliveryKey: messageId + ':attachment-0'}, binary: {file}}];"
+      }
+    },
+    {
+      "id": "backend-intake",
+      "name": "Backend intake",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/api/v1/integrations/n8n/invoices",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Idempotency-Key",
+              "value": "={{ $json.deliveryKey }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "file"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "safe-result",
+      "name": "Safe result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        750,
+        -80
+      ],
+      "parameters": {
+        "jsCode": "const r = $json; return [{json: {invoice_id: r.invoice_id, status: r.status, duplicate: r.duplicate, blocker_codes: r.blocker_codes || [], error_code: r.error_code || null, notification: 'Invoice ' + r.invoice_id + ': ' + r.status + '. Checks: ' + (r.blocker_codes || []).join(', ')}}];"
+      }
+    },
+    {
+      "id": "needs-review",
+      "name": "Needs review",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        -80
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "needs-review",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "NEEDS_REVIEW",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "optional-telegram-alert",
+      "name": "Optional Telegram alert",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1250,
+        -160
+      ],
+      "parameters": {
+        "chatId": "REPLACE_WITH_LOCAL_CHAT_ID",
+        "text": "={{ $json.notification }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "disabled": true
+    },
+    {
+      "id": "sanitized-integration-failure",
+      "name": "Sanitized integration failure",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        750,
+        160
+      ],
+      "parameters": {
+        "jsCode": "console.warn('INVOICE_INTEGRATION_FAILED: inspect backend health and credentials; retry the same delivery ID.'); throw new Error('INVOICE_INTEGRATION_FAILED');"
+      }
+    }
+  ],
+  "connections": {
+    "Fixture webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate one attachment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail AP-DEMO": {
+      "main": [
+        [
+          {
+            "node": "Validate one attachment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate one attachment": {
+      "main": [
+        [
+          {
+            "node": "Backend intake",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Backend intake": {
+      "main": [
+        [
+          {
+            "node": "Safe result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sanitized integration failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Safe result": {
+      "main": [
+        [
+          {
+            "node": "Needs review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Needs review": {
+      "main": [
+        [
+          {
+            "node": "Optional Telegram alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "executionTimeout": 240,
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none",
+    "saveManualExecutions": false
+  },
+  "pinData": {},
+  "tags": []
+}

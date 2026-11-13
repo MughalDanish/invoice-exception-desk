@@ -14,6 +14,7 @@ from app.core.config import Settings
 from app.core.errors import AppError
 from app.core.middleware import RequestSizeLimit
 from app.db.session import build_engine, build_session_factory
+from app.modules.invoices.integration import router as integration_router
 from app.modules.invoices.routes import Db, router
 
 
@@ -28,7 +29,7 @@ def create_app(settings: Settings | None = None, engine=None) -> FastAPI:
 
     app = FastAPI(
         title="Invoice Exception Desk",
-        version="0.3.0",
+        version="0.4.0",
         lifespan=lifespan,
         docs_url=None,
         redoc_url=None,
@@ -85,7 +86,7 @@ def create_app(settings: Settings | None = None, engine=None) -> FastAPI:
     @app.get("/health")
     def health(session: Db):
         revision = session.scalar(text("SELECT version_num FROM alembic_version"))
-        if revision != "0003_review_ledger":
+        if revision != "0004_integration_delivery":
             raise AppError(
                 503, "MIGRATIONS_REQUIRED", "Apply database migrations before using this backend"
             )
@@ -100,4 +101,5 @@ def create_app(settings: Settings | None = None, engine=None) -> FastAPI:
         return get_swagger_ui_html(openapi_url="/openapi.json", title=app.title)
 
     app.include_router(router)
+    app.include_router(integration_router)
     return app

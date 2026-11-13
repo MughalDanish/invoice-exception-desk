@@ -140,6 +140,14 @@ class ValidationResult(IdentityMixin, Base):
     run_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, index=True)
 
 
+class IntegrationDelivery(IdentityMixin, Base):
+    __tablename__ = "integration_deliveries"
+
+    key_sha256: Mapped[str] = mapped_column(String(64), unique=True)
+    file_sha256: Mapped[str] = mapped_column(String(64))
+    invoice_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("invoices.id"), index=True)
+
+
 class InvoiceReview(IdentityMixin, Base):
     __tablename__ = "invoice_reviews"
     __table_args__ = (UniqueConstraint("invoice_id", "revision", "decision"),)

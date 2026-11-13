@@ -17,6 +17,7 @@ from app.db.models import (
     InvoiceStatus,
     LedgerEntry,
     ProcessingAttempt,
+    Severity,
     ValidationResult,
     Vendor,
 )
@@ -91,10 +92,23 @@ def list_invoices(
     search: str = Query(default="", max_length=200),
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=25, ge=1, le=100),
+    issue: str = Query(default="", max_length=80),
 ):
     conditions = []
     if status is not None:
         conditions.append(Invoice.status == status)
+    if issue:
+        conditions.append(
+            select(ValidationResult.id)
+            .where(
+                ValidationResult.invoice_id == Invoice.id,
+                ValidationResult.run_id == Invoice.validation_run_id,
+                ValidationResult.revision == Invoice.revision,
+                ValidationResult.passed.is_(False),
+                ValidationResult.rule_code == issue,
+            )
+            .exists()
+        )
     if search:
         # Search characters such as % and _ are literal, not SQL wildcards.
         conditions.append(
@@ -112,8 +126,27 @@ def list_invoices(
         .offset((page - 1) * limit)
         .limit(limit)
     ).all()
+    issues = {}
+    if invoices:
+        for invoice_id, code in session.execute(
+            select(ValidationResult.invoice_id, ValidationResult.rule_code)
+            .join(Invoice, Invoice.id == ValidationResult.invoice_id)
+            .where(
+                Invoice.id.in_([row.id for row in invoices]),
+                ValidationResult.run_id == Invoice.validation_run_id,
+                ValidationResult.revision == Invoice.revision,
+                ValidationResult.passed.is_(False),
+            )
+            .order_by(ValidationResult.rule_code)
+        ):
+            issues.setdefault(invoice_id, []).append(code)
     return InvoicePage(
-        items=[InvoiceSummary.model_validate(row) for row in invoices],
+        items=[
+            InvoiceSummary.model_validate(row).model_copy(
+                update={"issue_codes": issues.get(row.id, [])}
+            )
+            for row in invoices
+        ],
         page=page,
         limit=limit,
         total=total,
@@ -135,7 +168,6 @@ def detail(invoice_id: uuid.UUID, session: Db):
     return InvoiceDetail(
         **InvoiceSummary.model_validate(invoice).model_dump(),
         extracted_data=invoice.extracted_data,
-        current_data=invoice.current_data,
         reviews=[
             {
                 "id": str(review.id),
@@ -346,4 +378,30 @@ def stats(session: Db):
         "by_status": counts,
         "posted_totals_by_currency": posted,
         "flagged_totals_by_currency": {code: str(total) for code, total in flagged.items()},
+        "duplicate_invoices": session.scalar(
+            select(func.count(Invoice.id)).where(
+                select(ValidationResult.id)
+                .where(
+                    ValidationResult.invoice_id == Invoice.id,
+                    ValidationResult.run_id == Invoice.validation_run_id,
+                    ValidationResult.revision == Invoice.revision,
+                    ValidationResult.rule_code == "DUPLICATE_INVOICE",
+                    ValidationResult.passed.is_(False),
+                    ValidationResult.severity == Severity.BLOCKER,
+                )
+                .exists()
+            )
+        ),
+        "recent_activity": [
+            {
+                "id": str(event.id),
+                "invoice_id": str(event.invoice_id) if event.invoice_id else None,
+                "event_type": event.event_type,
+                "actor": event.actor,
+                "created_at": event.created_at.isoformat(),
+            }
+            for event in session.scalars(
+                select(AuditEvent).order_by(AuditEvent.created_at.desc(), AuditEvent.id).limit(8)
+            )
+        ],
     }
