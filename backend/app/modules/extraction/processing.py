@@ -120,7 +120,11 @@ def process_invoice(session, invoice_id, settings, extractor, actor, retry=False
                 actor,
                 "VALIDATION_COMPLETED",
                 invoice.id,
-                {"revision": invoice.revision, "blocker_codes": blockers},
+                {
+                    "revision": invoice.revision,
+                    "blocker_codes": blockers,
+                    "validation_run_id": str(invoice.validation_run_id),
+                },
             )
             target = InvoiceStatus.NEEDS_REVIEW if blockers else InvoiceStatus.READY_TO_POST
             transition(session, invoice, target, actor, {"attempt_id": str(attempt.id)})

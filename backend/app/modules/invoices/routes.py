@@ -1,8 +1,10 @@
 import uuid
+from datetime import UTC, datetime
+from decimal import Decimal
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, Query, Request, UploadFile
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
@@ -11,25 +13,44 @@ from app.core.auth import require_operator
 from app.db.models import (
     AuditEvent,
     Invoice,
+    InvoiceReview,
     InvoiceStatus,
+    LedgerEntry,
     ProcessingAttempt,
     ValidationResult,
     Vendor,
 )
 from app.db.session import get_session
+from app.modules.approvals.schemas import (
+    CorrectionRequest,
+    ReviewRequest,
+    RevisionRequest,
+    VendorCreate,
+)
+from app.modules.approvals.service import (
+    correct_invoice,
+    create_vendor,
+    revalidate_invoice,
+    review_invoice,
+)
 from app.modules.extraction.adapters import Extractor, get_extractor
 from app.modules.extraction.processing import process_invoice
 from app.modules.invoices.schemas import (
     AuditSummary,
+    InvoiceActionResult,
     InvoiceDetail,
     InvoicePage,
     InvoiceSummary,
     ProcessingResult,
     UploadResult,
     VendorSummary,
+    action_result,
 )
 from app.modules.invoices.service import get_invoice, ingest_file
 from app.modules.invoices.storage import resolve_private_file, validate_file
+from app.modules.ledger.export import export_csv
+from app.modules.ledger.schemas import LedgerPage, LedgerSummary, ledger_summary
+from app.modules.ledger.service import post_invoice
 
 router = APIRouter(prefix="/api/v1", dependencies=[Depends(require_operator)])
 Db = Annotated[Session, Depends(get_session)]
@@ -107,6 +128,7 @@ def detail(invoice_id: uuid.UUID, session: Db):
         .where(
             ValidationResult.invoice_id == invoice.id,
             ValidationResult.revision == invoice.revision,
+            ValidationResult.run_id == invoice.validation_run_id,
         )
         .order_by(ValidationResult.created_at, ValidationResult.id)
     ).all()
@@ -114,6 +136,25 @@ def detail(invoice_id: uuid.UUID, session: Db):
         **InvoiceSummary.model_validate(invoice).model_dump(),
         extracted_data=invoice.extracted_data,
         current_data=invoice.current_data,
+        reviews=[
+            {
+                "id": str(review.id),
+                "revision": review.revision,
+                "reviewer": review.reviewer,
+                "decision": review.decision.value,
+                "notes": review.notes,
+                "payload_sha256": review.payload_sha256,
+                "created_at": review.created_at,
+            }
+            for review in session.scalars(
+                select(InvoiceReview)
+                .where(InvoiceReview.invoice_id == invoice.id)
+                .order_by(InvoiceReview.created_at, InvoiceReview.id)
+            ).all()
+        ],
+        ledger_entry_id=session.scalar(
+            select(LedgerEntry.id).where(LedgerEntry.invoice_id == invoice.id)
+        ),
         processing_attempts=[
             {
                 "id": str(attempt.id),
@@ -194,3 +235,115 @@ def audit(invoice_id: uuid.UUID, session: Db):
 @router.get("/vendors", response_model=list[VendorSummary])
 def vendors(session: Db):
     return session.scalars(select(Vendor).order_by(Vendor.display_name)).all()
+
+
+@router.patch("/invoices/{invoice_id}", response_model=InvoiceActionResult)
+def correct(invoice_id: uuid.UUID, body: CorrectionRequest, session: Db, actor: Operator):
+    return action_result(correct_invoice(session, invoice_id, body, actor))
+
+
+@router.post("/invoices/{invoice_id}/revalidate", response_model=InvoiceActionResult)
+def revalidate(
+    invoice_id: uuid.UUID, body: RevisionRequest, request: Request, session: Db, actor: Operator
+):
+    return action_result(
+        revalidate_invoice(session, invoice_id, body, request.app.state.settings, actor)
+    )
+
+
+@router.post("/invoices/{invoice_id}/review", response_model=InvoiceActionResult)
+def review(
+    invoice_id: uuid.UUID, body: ReviewRequest, request: Request, session: Db, actor: Operator
+):
+    invoice, recorded = review_invoice(session, invoice_id, body, request.app.state.settings, actor)
+    return action_result(invoice, recorded)
+
+
+@router.post("/invoices/{invoice_id}/post", response_model=LedgerSummary)
+def post(
+    invoice_id: uuid.UUID, body: RevisionRequest, request: Request, session: Db, actor: Operator
+):
+    return ledger_summary(
+        post_invoice(session, invoice_id, body, request.app.state.settings, actor)
+    )
+
+
+@router.post("/vendors", response_model=VendorSummary, status_code=201)
+def add_vendor(body: VendorCreate, session: Db, actor: Operator):
+    return create_vendor(session, body, actor)
+
+
+def posted_ledger_query():
+    return (
+        select(LedgerEntry, Vendor.display_name)
+        .join(Invoice, Invoice.id == LedgerEntry.invoice_id)
+        .join(Vendor, Vendor.id == LedgerEntry.vendor_id)
+        .where(Invoice.status == InvoiceStatus.POSTED)
+    )
+
+
+@router.get("/ledger", response_model=LedgerPage)
+def ledger(
+    session: Db, page: int = Query(default=1, ge=1), limit: int = Query(default=25, ge=1, le=100)
+):
+    query = posted_ledger_query()
+    total = session.scalar(select(func.count()).select_from(query.subquery()))
+    rows = session.execute(
+        query.order_by(LedgerEntry.posted_at.desc(), LedgerEntry.id)
+        .offset((page - 1) * limit)
+        .limit(limit)
+    ).all()
+    return LedgerPage(
+        items=[ledger_summary(entry, name) for entry, name in rows],
+        page=page,
+        limit=limit,
+        total=total,
+    )
+
+
+@router.get("/ledger/export.csv")
+def download_ledger(session: Db):
+    rows = session.execute(
+        posted_ledger_query().order_by(LedgerEntry.posted_at, LedgerEntry.id)
+    ).all()
+    filename = f"invoice-ledger-{datetime.now(UTC):%Y%m%d}.csv"
+    return Response(
+        export_csv(rows),
+        media_type="text/csv; charset=utf-8",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "no-store",
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
+
+
+@router.get("/stats")
+def stats(session: Db):
+    counts = {status.value: 0 for status in InvoiceStatus}
+    for status, count in session.execute(
+        select(Invoice.status, func.count()).group_by(Invoice.status)
+    ):
+        counts[status.value] = count
+    posted = {
+        currency: str(total)
+        for currency, total in session.execute(
+            select(LedgerEntry.currency, func.sum(LedgerEntry.total))
+            .join(Invoice, Invoice.id == LedgerEntry.invoice_id)
+            .where(Invoice.status == InvoiceStatus.POSTED)
+            .group_by(LedgerEntry.currency)
+        )
+    }
+    flagged = {}
+    for (payload,) in session.execute(
+        select(Invoice.current_data).where(Invoice.status == InvoiceStatus.NEEDS_REVIEW)
+    ):
+        if payload and payload.get("currency") and payload.get("total") is not None:
+            currency = payload["currency"].strip().upper()
+            flagged[currency] = flagged.get(currency, Decimal(0)) + Decimal(payload["total"])
+    return {
+        "total_invoices": sum(counts.values()),
+        "by_status": counts,
+        "posted_totals_by_currency": posted,
+        "flagged_totals_by_currency": {code: str(total) for code, total in flagged.items()},
+    }

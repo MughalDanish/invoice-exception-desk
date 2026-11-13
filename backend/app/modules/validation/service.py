@@ -1,4 +1,5 @@
 import hashlib
+import uuid
 
 from sqlalchemy import func, select
 
@@ -6,18 +7,36 @@ from app.db.models import Invoice, InvoiceStatus, LedgerEntry, ValidationResult,
 from app.modules.validation.rules import VendorPolicy, check_invoice, normalize
 
 
-def validate_current(session, invoice, data, tolerance):
-    vendor_name = normalize(data.vendor_name)
-    number = normalize(data.invoice_number)
+def identity(data):
+    vendor_name, number = normalize(data.vendor_name), normalize(data.invoice_number)
     # Full-width/case transformations can expand text beyond storage limits.
     if len(vendor_name) > 200 or len(number) > 200:
         from app.modules.extraction.adapters import ExtractionError
 
         raise ExtractionError("NORMALIZED_IDENTITY_TOO_LONG")
-    fingerprint = hashlib.sha256(f"{vendor_name}\x00{number}".encode()).digest()
-    key = int.from_bytes(fingerprint[:8], "big", signed=True)
-    session.execute(select(func.pg_advisory_xact_lock(key)))
-    vendor = session.scalar(select(Vendor).where(Vendor.normalized_name == vendor_name))
+    return vendor_name, number
+
+
+def lock_identities(session, *pairs):
+    keys = {
+        int.from_bytes(
+            hashlib.sha256(f"{vendor or ''}\x00{number or ''}".encode()).digest()[:8],
+            "big",
+            signed=True,
+        )
+        for vendor, number in pairs
+    }
+    for key in sorted(keys):
+        session.execute(select(func.pg_advisory_xact_lock(key)))
+
+
+def validate_current(session, invoice, data, tolerance, lock_vendor=False):
+    vendor_name, number = identity(data)
+    lock_identities(session, (vendor_name, number))
+    query = select(Vendor).where(Vendor.normalized_name == vendor_name)
+    if lock_vendor:
+        query = query.with_for_update(read=True)
+    vendor = session.scalar(query.execution_options(populate_existing=True))
     duplicate = False
     if vendor_name and number:
         duplicate = (
@@ -58,6 +77,8 @@ def validate_current(session, invoice, data, tolerance):
     invoice.vendor_id = vendor.id if vendor else None
     invoice.normalized_vendor_name = vendor_name or None
     invoice.normalized_invoice_number = number or None
+    run_id = uuid.uuid4()
+    invoice.validation_run_id = run_id
     for rule in rules:
         session.add(
             ValidationResult(
@@ -69,6 +90,7 @@ def validate_current(session, invoice, data, tolerance):
                 message=rule.message,
                 expected=rule.expected,
                 observed=rule.observed,
+                run_id=run_id,
             )
         )
     return rules

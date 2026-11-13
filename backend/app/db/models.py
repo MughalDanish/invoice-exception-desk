@@ -115,10 +115,15 @@ class Invoice(IdentityMixin, Base):
     review_required: Mapped[bool] = mapped_column(
         Boolean, default=False, server_default=text("false")
     )
+    validation_run_id: Mapped[uuid.UUID | None] = mapped_column(Uuid)
     vendor_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("vendors.id"))
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
+
+    @property
+    def validated_revision(self):
+        return self.revision if self.validation_run_id else None
 
 
 class ValidationResult(IdentityMixin, Base):
@@ -132,6 +137,7 @@ class ValidationResult(IdentityMixin, Base):
     message: Mapped[str] = mapped_column(Text)
     expected: Mapped[dict | None] = mapped_column(JSONB)
     observed: Mapped[dict | None] = mapped_column(JSONB)
+    run_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, index=True)
 
 
 class InvoiceReview(IdentityMixin, Base):
@@ -143,6 +149,7 @@ class InvoiceReview(IdentityMixin, Base):
     reviewer: Mapped[str] = mapped_column(String(200))
     decision: Mapped[Decision] = mapped_column(enum_type(Decision))
     notes: Mapped[str] = mapped_column(Text, default="")
+    payload_sha256: Mapped[str | None] = mapped_column(String(64))
 
 
 class LedgerEntry(IdentityMixin, Base):
@@ -158,6 +165,7 @@ class LedgerEntry(IdentityMixin, Base):
     total: Mapped[Decimal] = mapped_column(Numeric(18, 2))
     posted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     posted_by: Mapped[str] = mapped_column(String(200))
+    snapshot: Mapped[dict] = mapped_column(JSONB, default=dict, server_default=text("'{}'::jsonb"))
 
 
 class AuditEvent(IdentityMixin, Base):

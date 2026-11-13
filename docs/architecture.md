@@ -87,3 +87,39 @@ stored rule results alone must never authorize posting. The currency and arithme
 limits, retry behavior, and live Gemini configuration are documented in the README.
 
 - [Official Google Gen AI SDK](https://github.com/googleapis/python-genai)
+
+## Day 3: reviewed revisions and ledger transactions
+
+Corrections replace only extracted fields, increment the revision, preserve original
+extraction, and append a field-level before/after diff. Current validation is cleared;
+revalidation and a current human decision are required before a corrected invoice can
+post. An approval is bound to both the revision and canonical payload hash, using
+the authenticated operator identity. No request can override a failed rule.
+
+Each validation batch has a UUID. The invoice points to its current batch; details
+display that batch only, while earlier results and audited run IDs remain available
+in storage. Migration `0003_review_ledger` preserves the visible Day 2 batch and adds
+review payload hashes and posted ledger snapshots. Existing unbound legacy approvals
+cannot authorize posting; the pre-Day 3 application did not create approval rows.
+
+Posting and corrections serialize on the invoice row. Business-key advisory locks
+also serialize new normalized identities against processing and posting; corrections
+lock both old and new keys in sorted order. Fresh supplier checks use a shared row
+lock, preventing a concurrent policy update from changing the checked row before
+commit. Duplicate checks examine both active invoice identities and ledger uniqueness.
+
+The ledger insert, invoice transition, validation batch and audit chain commit in a
+single transaction. A later audit failure rolls everything back. Same-invoice retries
+return the same ledger entry. The database unique constraints remain authoritative;
+a uniqueness failure rolls back first and then records a blocked attempt in a separate
+transaction. Failed rule checks commit their new results/review state before the API
+returns HTTP 409. No extraction/model call occurs during posting.
+
+Ledger records store the posted payload and revision, providing a stable source for
+list and CSV output. Review and ledger rows have database UPDATE/DELETE guards just
+like audit events. CSV uses standard quoting and apostrophe-prefix formula defenses;
+dashboard totals remain separated by currency. This is an internal synthetic ledger,
+not an ERP posting or payment.
+
+- [SQLAlchemy transaction management](https://docs.sqlalchemy.org/en/20/orm/session_transaction.html)
+- [SQLAlchemy PostgreSQL dialect](https://docs.sqlalchemy.org/en/20/dialects/postgresql.html)

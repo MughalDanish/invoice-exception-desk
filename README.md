@@ -3,7 +3,8 @@
 Catch invoice mistakes before they reach your ledger.
 
 An invoice exception-management demonstration using synthetic invoices.
-Days 1–2 implement secure ingestion, extraction, validation, and processing recovery.
+Days 1–3 implement ingestion, extraction, validation, human review, safe ledger posting,
+audit history, and CSV export. The dashboard is the next milestone.
 
 ## Stack
 
@@ -23,8 +24,13 @@ results, recoverable processing attempts, and business duplicate detection.
 Uploads start `RECEIVED`; processing produces `READY_TO_POST`, `NEEDS_REVIEW`,
 or `EXTRACTION_FAILED`. Nothing is automatically posted.
 
-Pending: corrections/reviews/posting/CSV (Day 3), Next.js dashboard and n8n workflows
-(Day 4), portfolio deployment and QA (Day 5). Gemini's request construction and
+Day 3 adds audited corrections, explicit revalidation, revision/payload-bound review,
+rejection, transactional posting with fresh validation and database uniqueness,
+immutable ledger snapshots, supplier registration, ledger pagination, sanitized CSV,
+and per-currency dashboard statistics. Posted and rejected invoices are terminal.
+
+Pending: Next.js dashboard and n8n workflows (Day 4), portfolio deployment and QA
+(Day 5). Gemini's request construction and
 failure handling are tested offline with the real SDK and a fake HTTP transport;
 live extraction has not been verified. Gmail, Telegram, and n8n are not connected.
 
@@ -63,9 +69,10 @@ returns `200` and the existing ID; a first upload returns `201`. Repeating the
 seed command likewise returns the existing invoice. `--all` ingests every fixture,
 but **does not automatically process** them. Use the authenticated
 `POST /api/v1/invoices/{id}/process` endpoint to extract and validate an invoice.
-`python -m app.smoke` demonstrates a clean invoice becoming ready, an incorrect
-total requiring review, and an altered business duplicate requiring review.
-It requires mock mode and never posts ledger entries.
+`python -m app.smoke` demonstrates blocked duplicate approval/posting and rejection,
+clean posting, a wrong total corrected from 2500.00 to 2300.00, current-revision
+approval, idempotent posting, audit diffs and CSV. It requires mock mode and writes
+synthetic internal ledger records only. Repeating it returns the same ledger IDs.
 
 ## Host development on Windows
 
@@ -111,7 +118,7 @@ docker compose exec backend python -c "import os,pytest; os.environ['TEST_DATABA
 
 On systems with GNU Make, `make up`, `make migrate`, `make seed`, `make test`,
 `make demo`, and `make down` wrap the corresponding Docker commands. `make demo`
-currently demonstrates ingestion and validation; review and posting are a later milestone.
+demonstrates ingestion, validation, review, posting, audit and export through the API.
 
 Tests cover format/signature rejection, genuine images, malformed files, size
 limits including chunked uploads, authentication, CORS, path traversal, migration
@@ -121,6 +128,9 @@ immutability, and database ledger uniqueness. Day 2 also covers rule boundaries,
 invalid AI output, the real Gemini SDK wire format with a fake HTTP transport,
 bounded retries, extraction failures, idempotent processing, concurrent requests,
 expired processing attempts, and protection against stale workers.
+Day 3 tests cover fresh posting checks, approval blockers, revision/payload matching,
+simultaneous posts/edits/approvals, ledger rollback and uniqueness, terminal states,
+immutable reviews/ledger rows, snapshot-based CSV, quoting and formula protection.
 Integration tests require a database
 role that can create and drop schemas. They do not clear existing application tables.
 
@@ -139,13 +149,95 @@ with `python scripts/generate_fixtures.py` (standard library only).
 | `GET /api/v1/invoices/{id}` | Metadata, current payload and validations |
 | `GET /api/v1/invoices/{id}/file` | Authenticated original attachment |
 | `GET /api/v1/invoices/{id}/audit` | Append-only event history |
-| `GET /api/v1/vendors` | Seeded suppliers |
+| `PATCH /api/v1/invoices/{id}` | Audited field corrections with expected revision |
+| `POST /api/v1/invoices/{id}/revalidate` | Fresh checks for the expected revision |
+| `POST /api/v1/invoices/{id}/review` | Approve/reject the expected revision; rejects require notes |
+| `POST /api/v1/invoices/{id}/post` | Fresh validation and atomic, idempotent ledger posting |
+| `GET /api/v1/vendors` | Supplier registry |
+| `POST /api/v1/vendors` | Register supplier/policy with an audit event |
+| `GET /api/v1/ledger` | Posted ledger rows with page/limit |
+| `GET /api/v1/ledger/export.csv` | Download posted records with CSV formula protection |
+| `GET /api/v1/stats` | State counts and separate totals per currency |
 
 Errors use `{ "error": { "code": "...", "message": "..." } }`. Processing returns
 HTTP 200 with the persisted invoice state and attempt/error code, including an
 `EXTRACTION_FAILED` result. Invalid state/retry actions return HTTP 409.
 Invoice detail includes current/extracted data, rules with expected/observed values,
-and processing-attempt history. Unprocessed invoices still have null payloads.
+processing/review history and linked ledger ID. Unprocessed invoices still have null
+payloads. Current validation results belong to one batch; prior batches remain in
+the database and their run IDs are recorded in audits.
+
+## Corrections, review and posting
+
+All actions require the authenticated local operator. Read the current revision
+from invoice detail and send it as `expected_revision`. The server assigns reviewer
+identity from authentication; caller-supplied identities and override flags are rejected.
+
+Example bodies for a newly processed wrong-total invoice:
+
+```json
+{"expected_revision":1,"changes":{"total":"2300.00"},"notes":"Subtotal plus tax checked"}
+```
+
+Send this to `PATCH /api/v1/invoices/{id}`. Only extraction fields are editable;
+nested objects/line-item arrays are replaced as complete field values. A real edit
+increments the revision, preserves original extraction, records before/after diffs,
+sets `review_required`, clears current validation, and enters `NEEDS_REVIEW`.
+An identical-value correction records a no-change audit without incrementing revision.
+
+Then submit to `/revalidate`, `/review`, and `/post`, respectively:
+
+```json
+{"expected_revision":2}
+```
+
+```json
+{"expected_revision":2,"decision":"APPROVE","notes":"Corrected total verified"}
+```
+
+```json
+{"expected_revision":2}
+```
+
+Corrections must be explicitly revalidated before approval/posting. Approval runs
+fresh checks and binds the current revision and canonical payload SHA-256. It cannot
+waive arithmetic, vendor, duplicate or other blockers. Corrected/flagged invoices
+stay `NEEDS_REVIEW` after passing revalidation until that payload is approved.
+Another real edit invalidates the previous approval by creating a new revision.
+
+Reject with `decision: "REJECT"` and non-empty notes. A ready invoice first enters
+review and is then rejected in the same audited transaction. Rejection is terminal.
+Repeated identical reviews return the same decision; recorded review notes cannot
+be silently changed. Stale revisions and terminal edits return HTTP 409.
+
+Posting locks the invoice and normalized business identity, checks supplier policy
+under a shared row lock, and re-runs all blocking rules inside the transaction.
+Ledger insert, `POSTED` transition and audit events commit atomically. A blocker
+returns 409 and persists fresh failed checks and the review state. A missing current
+approval also returns 409. Database uniqueness independently protects invoice ID and
+supplier/invoice number; conflicts roll back partial writes and return to review.
+Retried posting returns the same ledger ID. Clean, never-flagged invoices may be
+posted explicitly without a separate review decision. Automatic posting is not
+implemented; keep `AUTO_POST_CLEAN=false`.
+
+Register an approved unknown supplier with `POST /api/v1/vendors` (all synthetic):
+
+```json
+{"display_name":"Unregistered Supplier 1","expected_currency":"USD","baseline_amount_limit":"5000.00","is_approved":true}
+```
+
+Supplier names use the same exact normalization as invoice validation. Amount
+thresholds require a currency; JPY thresholds must be whole yen. Registration is
+audited and does not waive invoice rules. Revalidate and approve the held invoice.
+
+Ledger rows retain the posted payload/revision snapshot, so subsequent registry
+display-name changes do not alter exports. The CSV includes only posted entries,
+quotes embedded commas/quotes/newlines, uses UTF-8 with BOM, and prefixes potentially
+active formula cells with an apostrophe (including leading whitespace/control and
+Unicode variants). Filename dates and timestamps use UTC. Export is generated in
+memory for this small demo; it is not a large-ledger streaming implementation.
+Statistics keep totals separated by currency and are dashboard summaries, not a
+cross-currency financial aggregate.
 
 ## Extraction and retry behavior
 
@@ -209,13 +301,15 @@ Normalization uses Unicode NFKC, case folding, and collapsed whitespace; punctua
 is preserved. There is no fuzzy supplier approval. Business duplicates are detected
 against other active invoices and ledger identities, independent of total. Exact
 file repeats still return the original invoice at ingestion. Rejected/failed invoice
-peers are excluded from active duplicate checks. Validation is a snapshot; Day 3
-posting must recheck blockers inside its transaction. An exception sets the sticky
-`review_required` flag for the later correction/approval flow.
+peers are excluded from active duplicate checks. Validation is a snapshot; posting
+rechecks blockers inside its transaction. An exception sets the sticky
+`review_required` flag. Reject an active duplicate before trying to post its original;
+if the original was flagged in the meantime, it also requires current review.
 
 Evidence is a short source snippet, not proof of source truth or calibrated AI
 confidence. Multi-rate tax, shipping/discount allocation, credit notes, and OCR
-training remain outside the MVP. No approval or posting API exists in Day 2.
+training remain outside the MVP. Reviewers are accountable for manual corrections
+that disagree with the document; approval records a human decision, not authenticity.
 
 ## Limits
 
@@ -223,11 +317,14 @@ Synthetic local demonstration only. No public dashboard or public write endpoint
 are deployed. Basic auth is for the local operator. Windows filesystem permissions
 inherit from the local account; POSIX modes also restrict files in Linux containers.
 Normal DB failures clean up new files; crash recovery for orphaned files is pending.
-The database audit trigger prevents ordinary UPDATE/DELETE, not an administrator
-changing the schema. No malware scanning, payments, or ERP integration is provided.
+Database triggers protect audit, review, and ledger rows against ordinary UPDATE/
+DELETE, not an administrator changing the schema. No malware scanning, payments,
+or ERP integration is provided. The API/OpenAPI interface is available now; the
+Next.js dashboard is not built yet.
 
 See [architecture](docs/architecture.md) for decisions and
-[Day 1 progress](docs/day-1-progress.md) and [Day 2 progress](docs/day-2-progress.md)
+[Day 1 progress](docs/day-1-progress.md), [Day 2 progress](docs/day-2-progress.md),
+and [Day 3 progress](docs/day-3-progress.md)
 for actually executed checks.
 
 ## Layout
