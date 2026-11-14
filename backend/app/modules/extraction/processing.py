@@ -28,6 +28,15 @@ def locked_invoice(session, invoice_id):
 
 
 def process_invoice(session, invoice_id, settings, extractor, actor, retry=False):
+    # A healthy worker must retain ownership through its entire retry budget.
+    lease = (
+        max(
+            LEASE,
+            timedelta(seconds=settings.gemini_timeout_seconds * settings.gemini_max_attempts + 30),
+        )
+        if settings.ai_mode == "gemini"
+        else LEASE
+    )
     with session.begin():
         invoice = locked_invoice(session, invoice_id)
         previous = session.scalar(
@@ -41,7 +50,7 @@ def process_invoice(session, invoice_id, settings, extractor, actor, retry=False
         if invoice.status in (InvoiceStatus.NEEDS_REVIEW, InvoiceStatus.READY_TO_POST):
             return invoice, previous
         if invoice.status == InvoiceStatus.EXTRACTING:
-            if not retry or (previous and previous.created_at > datetime.now(UTC) - LEASE):
+            if not retry or (previous and previous.created_at > datetime.now(UTC) - lease):
                 return invoice, previous
             if previous:
                 previous.status = AttemptStatus.FAILED

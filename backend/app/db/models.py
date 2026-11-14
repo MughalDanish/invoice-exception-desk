@@ -197,3 +197,27 @@ class ProcessingAttempt(IdentityMixin, Base):
     status: Mapped[AttemptStatus] = mapped_column(enum_type(AttemptStatus))
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     error_code: Mapped[str | None] = mapped_column(String(80))
+
+
+class AuthUser(IdentityMixin, Base):
+    __tablename__ = "auth_users"
+    username: Mapped[str] = mapped_column(String(200), unique=True)
+    password_hash: Mapped[str] = mapped_column(Text)
+    role: Mapped[str] = mapped_column(String(20), default="OPERATOR", server_default="OPERATOR")
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default=text("true"))
+
+
+class AuthSession(IdentityMixin, Base):
+    __tablename__ = "auth_sessions"
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("auth_users.id"), index=True)
+    refresh_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    revoke_reason: Mapped[str | None] = mapped_column(String(40))
+
+
+class AuthLoginWindow(Base):
+    __tablename__ = "auth_login_windows"
+    key_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    attempts: Mapped[int] = mapped_column(Integer)

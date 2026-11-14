@@ -17,7 +17,7 @@ from app.db.models import (
 from app.modules.approvals.schemas import RevisionRequest
 from app.modules.extraction.adapters import parse_extraction
 from app.modules.ledger.service import post_invoice
-from tests.conftest import AUTH
+from tests.conftest import AUTH, operator_auth
 from tests.test_processing import (
     detail,
     process,
@@ -31,7 +31,7 @@ pytestmark = pytest.mark.postgres
 def action(client, invoice_id, name, revision=1, **fields):
     return client.post(
         f"/api/v1/invoices/{invoice_id}/{name}",
-        auth=AUTH,
+        **operator_auth(client),
         json={"expected_revision": revision, **fields},
     )
 
@@ -39,7 +39,7 @@ def action(client, invoice_id, name, revision=1, **fields):
 def correction(client, invoice_id, revision=1, **changes):
     return client.patch(
         f"/api/v1/invoices/{invoice_id}",
-        auth=AUTH,
+        **operator_auth(client),
         json={
             "expected_revision": revision,
             "changes": changes,
@@ -167,7 +167,7 @@ def test_unknown_vendor_registration_is_audited_and_does_not_waive_rules(pg_clie
     assert action(pg_client, invoice_id, "review", decision="APPROVE").status_code == 409
     created = pg_client.post(
         "/api/v1/vendors",
-        auth=AUTH,
+        **operator_auth(pg_client),
         json={
             "display_name": "Unregistered Supplier 1",
             "expected_currency": "USD",
@@ -179,7 +179,7 @@ def test_unknown_vendor_registration_is_audited_and_does_not_waive_rules(pg_clie
     assert (
         pg_client.post(
             "/api/v1/vendors",
-            auth=AUTH,
+            **operator_auth(pg_client),
             json={
                 "display_name": " unregistered  SUPPLIER 1 ",
             },
@@ -376,7 +376,7 @@ def test_invalid_patches_notes_actor_spoofing_and_auth(pg_client, pg_engine):
         assert (
             pg_client.patch(
                 f"/api/v1/invoices/{invoice_id}",
-                auth=AUTH,
+                **operator_auth(pg_client),
                 json={"expected_revision": 1, "changes": changes},
             ).status_code
             == 422
@@ -452,4 +452,7 @@ def test_vendor_policy_request_validation(pg_client):
         {"display_name": "Supplier", "baseline_amount_limit": -1},
         {"display_name": "Supplier", "is_approved": "yes"},
     ):
-        assert pg_client.post("/api/v1/vendors", auth=AUTH, json=body).status_code == 422
+        assert (
+            pg_client.post("/api/v1/vendors", **operator_auth(pg_client), json=body).status_code
+            == 422
+        )

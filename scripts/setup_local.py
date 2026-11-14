@@ -19,13 +19,14 @@ def main():
         "app:CHANGE_ME@postgres", f"app:{database_password}@postgres"
     )
     contents = contents.replace(
-        "DEMO_BASIC_PASSWORD=CHANGE_ME",
-        f"DEMO_BASIC_PASSWORD={secrets.token_urlsafe(24)}",
+        "AUTH_BOOTSTRAP_PASSWORD=CHANGE_ME",
+        f"AUTH_BOOTSTRAP_PASSWORD={secrets.token_urlsafe(24)}",
     )
     contents = contents.replace(
         "N8N_INTEGRATION_KEY=CHANGE_ME",
         f"N8N_INTEGRATION_KEY={secrets.token_urlsafe(32)}",
     )
+    contents = contents.replace("AUTH_JWT_SECRET=CHANGE_ME", f"AUTH_JWT_SECRET={secrets.token_urlsafe(48)}")
     with target.open("x", encoding="utf-8") as handle:
         target.chmod(0o600)
         handle.write(contents)
