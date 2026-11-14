@@ -9,7 +9,7 @@ from pypdf import PdfReader
 from app.core.config import Settings
 from app.core.errors import AppError
 from app.modules.invoices.storage import resolve_private_file, validate_file
-from tests.conftest import AUTH, ROOT
+from tests.conftest import AUTH, ROOT, operator_auth
 
 
 def test_all_synthetic_pdfs_match_answer_key():
@@ -39,9 +39,13 @@ def test_all_synthetic_pdfs_match_answer_key():
         ("invoice.jpg", "image/jpeg", b"\xff\xd8\xfftruncated", 400, "MALFORMED_FILE"),
     ],
 )
-def test_bad_uploads_rejected_without_database(client, filename, mime, body, status, code):
-    response = client.post(
-        "/api/v1/invoices/upload", files={"file": (filename, body, mime)}, auth=AUTH
+def test_bad_uploads_rejected_without_database(
+    authenticated_client, filename, mime, body, status, code
+):
+    response = authenticated_client.post(
+        "/api/v1/invoices/upload",
+        files={"file": (filename, body, mime)},
+        **operator_auth(authenticated_client),
     )
     assert response.status_code == status
     assert response.json()["error"]["code"] == code
@@ -72,7 +76,9 @@ def test_file_limit_enforced(clean_pdf):
 
 
 def test_multipart_size_cap(client):
-    result = client.post("/api/v1/invoices/upload", auth=AUTH, content=b"x" * (8388608 + 65537))
+    result = client.post(
+        "/api/v1/invoices/upload", **operator_auth(client), content=b"x" * (8388608 + 65537)
+    )
     assert result.status_code == 413
     assert result.json()["error"]["code"] == "FILE_TOO_LARGE"
 
@@ -84,7 +90,7 @@ def test_size_limit_for_chunked_requests(client):
 
     result = client.post(
         "/api/v1/invoices/upload",
-        auth=AUTH,
+        **operator_auth(client),
         content=chunks(),
         headers={"Content-Type": "multipart/form-data; boundary=limit"},
     )
@@ -112,7 +118,7 @@ def test_storage_cannot_escape_root(tmp_path):
 def test_sensitive_routes_require_auth(client, path):
     result = client.get(path)
     assert result.status_code == 401
-    assert result.headers["www-authenticate"] == "Basic"
+    assert "www-authenticate" not in result.headers
 
 
 def test_upload_requires_auth(client, clean_pdf):
@@ -126,8 +132,8 @@ def test_wrong_password_rejected(client):
     assert client.get("/api/v1/invoices", auth=(AUTH[0], "wrong")).status_code == 401
 
 
-def test_authenticated_openapi(client):
-    result = client.get("/openapi.json", auth=AUTH)
+def test_authenticated_openapi(authenticated_client):
+    result = authenticated_client.get("/openapi.json")
     assert result.status_code == 200
     assert "/api/v1/invoices/upload" in result.json()["paths"]
 
@@ -139,7 +145,7 @@ def test_cors_only_allows_local_frontend(client, origin):
         headers={
             "Origin": origin,
             "Access-Control-Request-Method": "GET",
-            "Access-Control-Request-Headers": "authorization",
+            "Access-Control-Request-Headers": "x-csrf-token",
         },
     )
     bad = client.options(
@@ -158,4 +164,4 @@ def test_cors_only_allows_local_frontend(client, origin):
 @pytest.mark.parametrize("password", ["", "CHANGE_ME"])
 def test_no_default_authentication(password):
     with pytest.raises(ValidationError):
-        Settings(_env_file=None, demo_basic_password=password)
+        Settings(_env_file=None, auth_jwt_secret=password)

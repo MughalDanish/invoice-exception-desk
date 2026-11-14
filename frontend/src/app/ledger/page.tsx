@@ -1,11 +1,138 @@
-"use client";
+﻿"use client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { binary, download, money, request, time, type Ledger, type Page } from "@/lib/api";
-import { Heading, Notice, Pager, useDesk } from "@/components/desk";
+import { useMemo, useState } from "react";
+import type { ColumnDef } from "@tanstack/react-table";
+import { Download, ArrowUpRight, BookOpen } from "lucide-react";
+import type { Ledger } from "@/lib/api";
+import { financial, timestamp } from "@/lib/presentation";
+import { Heading, Pager, useDesk } from "@/components/desk";
+import { Button } from "@/components/ui/button";
+import { DataTable } from "@/components/shared/data-table";
+import { QueryError } from "@/components/shared/controls";
+import { useLedger, useExportLedger } from "@/features/ledger/queries";
 export default function LedgerPage() {
-  const { token, readOnly, fail } = useDesk(); const [data, setData] = useState<Page<Ledger> | null>(null); const [page, setPage] = useState(1); const [error, setError] = useState(""); const [pending, setPending] = useState(false);
-  useEffect(() => { const controller = new AbortController(); setError(""); request<Page<Ledger>>(token, `/ledger?page=${page}&limit=20`, { signal: controller.signal }).then(setData).catch(e => { if (!controller.signal.aborted) setError(fail(e)); }); return () => controller.abort(); }, [token, page]); // eslint-disable-line react-hooks/exhaustive-deps
-  async function exportCsv() { setPending(true); try { download(await binary(token, "/ledger/export.csv"), "invoice-ledger.csv"); } catch (e) { setError(fail(e)); } finally { setPending(false); } }
-  return <><Heading eyebrow="ACCOUNTED FOR" title="The ledger" subtitle="Posted invoices. Immutable snapshots of every finalized decision.">{!readOnly && <button className="primary" disabled={pending} onClick={exportCsv}>{pending ? "Exporting…" : "↓ Export CSV"}</button>}</Heading>{error && <Notice error>{error}</Notice>}<section className="panel"><div className="panel-title"><h2>Posted entries</h2><span className="muted">{data?.total ?? "…"} records</span></div><div className="table-scroll"><table><thead><tr><th>Supplier</th><th>Invoice</th><th className="numeric">Amount</th><th>Posted</th><th>Operator</th><th><span className="sr-only">Action</span></th></tr></thead><tbody>{data?.items.map(row => <tr key={row.id}><td><strong>{row.vendor_name}</strong></td><td>{row.invoice_number}</td><td className="numeric amount">{money(row.total, row.currency)}</td><td>{time(row.posted_at)}</td><td>{row.posted_by}</td><td><Link className="review-link" href={`/invoices/detail/?id=${row.invoice_id}`}>View ↗</Link></td></tr>)}</tbody></table>{data && !data.items.length && <div className="empty"><h3>Your ledger is ready</h3><p>Post an eligible invoice to record your first entry.</p></div>}{!data && !error && <div className="empty" role="status">Loading ledger…</div>}</div><Pager page={page} total={data?.total || 0} onChange={setPage}/></section><p className="fine">CSV includes posted records only. Formula-like values are escaped for spreadsheet safety. This internal ledger does not make payments.</p></>;
+  const { readOnly } = useDesk();
+  const [page, setPage] = useState(1);
+  const query = useLedger(page);
+  const exporting = useExportLedger();
+  const columns = useMemo<ColumnDef<Ledger>[]>(
+    () => [
+      {
+        accessorKey: "invoice_number",
+        header: "Invoice",
+        cell: ({ row }) => (
+          <Link
+            className="invoice-identity"
+            href={`/invoices/detail/?id=${row.original.invoice_id}`}
+          >
+            <span className="file-avatar">
+              <BookOpen className="size-4" />
+            </span>
+            <span>
+              <strong>{row.original.invoice_number}</strong>
+              <span>{row.original.vendor_name}</span>
+            </span>
+          </Link>
+        ),
+      },
+      {
+        accessorKey: "total",
+        header: "Posted amount",
+        meta: { numeric: true },
+        cell: ({ row }) => (
+          <strong className="financial-value">
+            {financial(row.original.total, row.original.currency)}
+          </strong>
+        ),
+      },
+      {
+        accessorKey: "posted_at",
+        header: "Posted",
+        cell: ({ row }) => (
+          <span className="text-xs text-muted-foreground">
+            {timestamp(row.original.posted_at)}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "posted_by",
+        header: "Operator",
+        cell: ({ row }) => (
+          <span className="text-xs">{row.original.posted_by}</span>
+        ),
+      },
+      {
+        id: "view",
+        header: "",
+        size: 45,
+        cell: ({ row }) => (
+          <Button asChild variant="ghost" size="icon-sm">
+            <Link
+              href={`/invoices/detail/?id=${row.original.invoice_id}`}
+              aria-label={`View ${row.original.invoice_number}`}
+            >
+              <ArrowUpRight className="size-4" />
+            </Link>
+          </Button>
+        ),
+      },
+    ],
+    [],
+  );
+  return (
+    <>
+      <Heading
+        eyebrow="LEDGER"
+        title="Ledger"
+        subtitle="Finalized invoice records. Every entry is an immutable snapshot."
+      >
+        {!readOnly && (
+          <Button
+            variant="outline"
+            loading={exporting.isPending}
+            onClick={() => exporting.mutate()}
+          >
+            <Download className="size-4" />
+            Export CSV
+          </Button>
+        )}
+      </Heading>
+      {query.error && (
+        <QueryError error={query.error} retry={() => query.refetch()} />
+      )}
+      <section className="surface">
+        <div className="section-header">
+          <div>
+            <h2>
+              Posted entries{" "}
+              <span className="count-pill">{query.data?.total ?? 0}</span>
+            </h2>
+            <p>Original currency and exact financial amounts</p>
+          </div>
+        </div>
+        <DataTable
+          columns={columns}
+          data={query.data?.items || []}
+          rowId={(row) => row.id}
+          href={(row) => `/invoices/detail/?id=${row.invoice_id}`}
+          paused={query.isPaused}
+          loading={query.isPending && !query.error}
+          fetching={query.isFetching}
+          previous={query.isPlaceholderData}
+          emptyTitle="No posted entries"
+          emptyDescription="Posted invoices will appear here after validation and any required approval."
+        />
+        <Pager
+          page={page}
+          total={query.data?.total || 0}
+          onChange={setPage}
+          disabled={query.isFetching || query.isPlaceholderData}
+        />
+      </section>
+      <p className="mt-4 text-xs text-muted-foreground">
+        CSV exports posted records with spreadsheet-safe values. This internal
+        ledger does not make payments.
+      </p>
+    </>
+  );
 }
