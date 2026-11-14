@@ -19,8 +19,10 @@ AUTH = ("operator", "test-password-only")
 def settings(tmp_path):
     return Settings(
         _env_file=None,
-        demo_basic_user=AUTH[0],
-        demo_basic_password=AUTH[1],
+        auth_jwt_secret="test-signing-secret-at-least-32-bytes-long",
+        auth_cookie_secure=False,
+        auth_bootstrap_username=AUTH[0],
+        auth_bootstrap_password=AUTH[1],
         storage_dir=tmp_path / "uploads",
         fixtures_dir=ROOT / "fixtures",
         ai_mode="mock",
@@ -73,5 +75,38 @@ def pg_engine():
 
 @pytest.fixture
 def pg_client(settings, pg_engine):
-    with TestClient(create_app(settings, engine=pg_engine)) as test_client:
+    from sqlalchemy.orm import Session
+
+    from app.modules.auth.bootstrap import bootstrap_operator
+
+    with Session(pg_engine) as db:
+        bootstrap_operator(db, *AUTH)
+    app = create_app(settings, engine=pg_engine)
+    with TestClient(app) as operator:
+        nonce = operator.get("/api/v1/auth/csrf").json()["csrf_token"]
+        result = operator.post(
+            "/api/v1/auth/login",
+            json={"username": AUTH[0], "password": AUTH[1]},
+            headers={"X-CSRF-Token": nonce},
+        )
+        assert result.status_code == 200, result.text
+        cookies = dict(operator.cookies)
+        nonce = result.json()["csrf_token"]
+    with TestClient(app) as test_client:
+        test_client.operator_cookies = cookies
+        test_client.headers["X-CSRF-Token"] = nonce
         yield test_client
+
+
+def operator_auth(client):
+    return {"cookies": getattr(client, "operator_cookies", {})}
+
+
+@pytest.fixture
+def authenticated_client(settings):
+    from app.core.auth import require_operator
+
+    app = create_app(settings)
+    app.dependency_overrides[require_operator] = lambda: AUTH[0]
+    with TestClient(app) as client:
+        yield client

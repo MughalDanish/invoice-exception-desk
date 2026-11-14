@@ -1,2 +1,4 @@
 import { InvoiceList } from "@/components/invoice-list";
-export default function Page() { return <InvoiceList mode="exceptions"/>; }
+export default function Page() {
+  return <InvoiceList mode="exceptions" />;
+}

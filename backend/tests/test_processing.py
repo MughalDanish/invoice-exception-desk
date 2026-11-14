@@ -15,7 +15,7 @@ from app.db.models import Invoice, InvoiceStatus, LedgerEntry, ProcessingAttempt
 from app.modules.extraction.adapters import ExtractionError, MockExtractor, get_extractor
 from app.modules.invoices.states import transition
 from app.seed import seed_vendors
-from tests.conftest import AUTH, ROOT
+from tests.conftest import AUTH, ROOT, operator_auth
 
 pytestmark = pytest.mark.postgres
 
@@ -23,18 +23,22 @@ pytestmark = pytest.mark.postgres
 def upload_fixture(client, name="clean-001.pdf"):
     content = (ROOT / "fixtures/invoices" / name).read_bytes()
     result = client.post(
-        "/api/v1/invoices/upload", auth=AUTH, files={"file": (name, content, "application/pdf")}
+        "/api/v1/invoices/upload",
+        **operator_auth(client),
+        files={"file": (name, content, "application/pdf")},
     )
     assert result.status_code in (200, 201)
     return result.json()["invoice_id"]
 
 
 def process(client, invoice_id, retry=False):
-    return client.post(f"/api/v1/invoices/{invoice_id}/process", auth=AUTH, params={"retry": retry})
+    return client.post(
+        f"/api/v1/invoices/{invoice_id}/process", **operator_auth(client), params={"retry": retry}
+    )
 
 
 def detail(client, invoice_id):
-    result = client.get(f"/api/v1/invoices/{invoice_id}", auth=AUTH)
+    result = client.get(f"/api/v1/invoices/{invoice_id}", **operator_auth(client))
     assert result.status_code == 200
     return result.json()
 
@@ -91,7 +95,9 @@ def test_fixture_processing_and_persisted_rules(
         if expected_rule == "TOTAL_MISMATCH":
             assert rule["expected"] == {"amount": "2300.00"}
             assert rule["observed"] == {"amount": "2500.00"}
-    events = pg_client.get(f"/api/v1/invoices/{invoice_id}/audit", auth=AUTH).json()
+    events = pg_client.get(
+        f"/api/v1/invoices/{invoice_id}/audit", **operator_auth(pg_client)
+    ).json()
     transitions = [event["details"] for event in events if event["event_type"] == "STATE_CHANGED"]
     assert {row["to"] for row in transitions} == {"EXTRACTING", expected_state}
 
@@ -125,8 +131,16 @@ def test_repeated_processing_does_not_overwrite_or_append_results(pg_client, pg_
     second = process(pg_client, invoice_id)
     assert first.json() == second.json()
     assert detail(pg_client, invoice_id) == before
-    assert pg_client.get("/api/v1/invoices?search=INV-A-001", auth=AUTH).json()["total"] == 1
-    assert pg_client.get("/api/v1/invoices?search=Alpha", auth=AUTH).json()["total"] == 1
+    assert (
+        pg_client.get("/api/v1/invoices?search=INV-A-001", **operator_auth(pg_client)).json()[
+            "total"
+        ]
+        == 1
+    )
+    assert (
+        pg_client.get("/api/v1/invoices?search=Alpha", **operator_auth(pg_client)).json()["total"]
+        == 1
+    )
 
 
 def test_failure_requires_explicit_retry_and_can_recover(pg_client, pg_engine):
@@ -154,7 +168,7 @@ def test_unknown_file_and_invalid_output_fail_explicitly(pg_client, pg_engine):
     content = (ROOT / "fixtures/invoices/clean-001.pdf").read_bytes() + b"\n% unknown file\n"
     upload = pg_client.post(
         "/api/v1/invoices/upload",
-        auth=AUTH,
+        **operator_auth(pg_client),
         files={"file": ("clean-001.pdf", content, "application/pdf")},
     )
     invoice_id = upload.json()["invoice_id"]
@@ -189,7 +203,12 @@ def test_missing_original_file_becomes_recoverable_failure(pg_client, pg_engine,
     assert process(pg_client, invoice_id).json()["error_code"] == "SOURCE_FILE_UNAVAILABLE"
 
 
-def test_concurrent_processing_is_visible_and_idempotent(pg_client, pg_engine):
+@pytest.mark.parametrize("long_running_gemini", [False, True])
+def test_concurrent_processing_is_visible_and_idempotent(
+    pg_client, pg_engine, settings, long_running_gemini
+):
+    if long_running_gemini:
+        settings.ai_mode = "gemini"
     seed(pg_engine)
     started, release = threading.Event(), threading.Event()
 
@@ -205,6 +224,11 @@ def test_concurrent_processing_is_visible_and_idempotent(pg_client, pg_engine):
         running = pool.submit(process, pg_client, invoice_id)
         try:
             assert started.wait(30)
+            if long_running_gemini:
+                with Session(pg_engine) as db:
+                    attempt = db.scalar(select(ProcessingAttempt))
+                    attempt.created_at = datetime.now(UTC) - timedelta(minutes=3)
+                    db.commit()
             visible = detail(pg_client, invoice_id)
             assert visible["status"] == "EXTRACTING"
             assert visible["processing_attempts"][0]["status"] == "RUNNING"
@@ -302,6 +326,20 @@ def test_day2_migration_preserves_day1_invoice(pg_client, pg_engine):
         config.attributes["connection"] = connection
         command.upgrade(config, "head")
     assert pg_client.get("/health").status_code == 200
+    # Downgrading before auth was introduced removes accounts and sessions too.
+    from app.modules.auth.bootstrap import bootstrap_operator
+
+    with Session(pg_engine) as db:
+        bootstrap_operator(db, *AUTH)
+    nonce = pg_client.get("/api/v1/auth/csrf").json()["csrf_token"]
+    signed = pg_client.post(
+        "/api/v1/auth/login",
+        json={"username": AUTH[0], "password": AUTH[1]},
+        headers={"X-CSRF-Token": nonce},
+    )
+    assert signed.status_code == 200
+    pg_client.operator_cookies = dict(pg_client.cookies)
+    pg_client.headers["X-CSRF-Token"] = signed.json()["csrf_token"]
     invoice = detail(pg_client, invoice_id)
     assert invoice["status"] == "RECEIVED" and invoice["review_required"] is False
 

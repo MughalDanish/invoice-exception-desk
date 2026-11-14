@@ -9,17 +9,30 @@ try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
   const errors = []; page.on("pageerror", e => errors.push(e.message));
   await page.goto(process.env.DASHBOARD_URL || "http://localhost:3000");
-  await page.getByLabel("Username", { exact: true }).fill(env.DEMO_BASIC_USER);
-  await page.getByLabel("Password", { exact: true }).fill(env.DEMO_BASIC_PASSWORD);
+  await page.getByLabel("Username", { exact: true }).fill(env.AUTH_BOOTSTRAP_USERNAME);
+  await page.getByLabel("Password", { exact: true }).fill(env.AUTH_BOOTSTRAP_PASSWORD);
   await page.getByRole("button", { name: "Open workspace" }).click();
+  await page.getByRole("region", { name: "Invoice statistics" }).waitFor();
+  await page.reload();
+  await page.getByRole("region", { name: "Invoice statistics" }).waitFor();
+  const cookies = (await page.context().cookies()).filter(c => c.name.startsWith("ied_"));
+  if (cookies.length !== 3 || cookies.some(c => !c.httpOnly)) throw new Error("Missing HttpOnly authentication cookies");
+  await page.context().clearCookies({ name: "ied_access" });
+  await page.reload();
   await page.getByRole("region", { name: "Invoice statistics" }).waitFor();
   await page.screenshot({ path: `${root}/storage/previews/local-dashboard.png`, fullPage: true });
   await page.getByRole("link", { name: "All invoices", exact: true }).first().click();
   await page.locator("tbody tr").first().waitFor();
-  const review = page.locator("tbody tr").first().getByRole("link", { name: /Review|View/ });
+  const review = page.locator("tbody tr").first().locator("td").nth(1);
   await review.click(); await page.getByRole("heading", { name: "Source document", exact: true }).waitFor();
   await page.screenshot({ path: `${root}/storage/previews/local-detail.png`, fullPage: true });
-  await page.getByRole("link", { name: "Overview", exact: true }).click();
+  for (const width of [1280, 768, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)) throw new Error(`Review overflow at ${width}px`);
+    await page.screenshot({ path: `${root}/storage/previews/local-detail-${width}.png`, fullPage: true });
+  }
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.getByRole("link", { name: "Overview", exact: true }).first().click();
   await page.getByRole("region", { name: "Invoice statistics" }).waitFor();
   await page.setViewportSize({ width: 390, height: 844 });
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth);

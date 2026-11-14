@@ -16,6 +16,7 @@ from alembic.config import Config
 from app.core.config import Settings
 from app.main import create_app
 from app.seed import seed_vendors
+from app.modules.auth.bootstrap import bootstrap_operator
 from dotenv import dotenv_values
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import make_url
@@ -54,11 +55,14 @@ def main():
             command.upgrade(config, "head")
         with Session(engine) as session:
             seed_vendors(session)
+            bootstrap_operator(session, "browser-operator", "browser-test-password-only")
         with tempfile.TemporaryDirectory(prefix="ied-browser-") as folder:
             settings = Settings(
                 _env_file=None,
-                demo_basic_user="browser-operator",
-                demo_basic_password="browser-test-password-only",
+                auth_jwt_secret="browser-test-signing-secret-at-least-32-bytes",
+                auth_cookie_secure=False,
+                auth_bootstrap_username="browser-operator",
+                auth_bootstrap_password="browser-test-password-only",
                 n8n_integration_key="browser-test-integration-only",
                 ai_mode="mock",
                 storage_dir=Path(folder),

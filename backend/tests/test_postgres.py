@@ -15,7 +15,7 @@ from app.db.models import AuditEvent, Invoice, LedgerEntry, Vendor
 from app.modules.invoices.service import ingest_file
 from app.modules.invoices.storage import validate_file
 from app.seed import seed_vendors
-from tests.conftest import AUTH, ROOT
+from tests.conftest import AUTH, ROOT, operator_auth
 
 pytestmark = pytest.mark.postgres
 
@@ -23,7 +23,7 @@ pytestmark = pytest.mark.postgres
 def upload(client, content):
     return client.post(
         "/api/v1/invoices/upload",
-        auth=AUTH,
+        **operator_auth(client),
         files={"file": ("invoice.pdf", content, "application/pdf")},
     )
 
@@ -34,16 +34,16 @@ def test_health_and_complete_upload_read_flow(pg_client, clean_pdf, settings):
     assert result.status_code == 201
     invoice_id = result.json()["invoice_id"]
     assert result.json()["status"] == "RECEIVED"
-    detail = pg_client.get(f"/api/v1/invoices/{invoice_id}", auth=AUTH).json()
+    detail = pg_client.get(f"/api/v1/invoices/{invoice_id}", **operator_auth(pg_client)).json()
     assert detail["revision"] == 1
     assert detail["byte_size"] == len(clean_pdf)
     assert detail["current_data"] is None
     assert "file_path" not in detail
-    original = pg_client.get(f"/api/v1/invoices/{invoice_id}/file", auth=AUTH)
+    original = pg_client.get(f"/api/v1/invoices/{invoice_id}/file", **operator_auth(pg_client))
     assert original.content == clean_pdf
     assert original.headers["cache-control"] == "no-store"
     assert len(list(settings.storage_dir.iterdir())) == 1
-    audit = pg_client.get(f"/api/v1/invoices/{invoice_id}/audit", auth=AUTH).json()
+    audit = pg_client.get(f"/api/v1/invoices/{invoice_id}/audit", **operator_auth(pg_client)).json()
     assert audit[0]["event_type"] == "INVOICE_RECEIVED"
     assert audit[0]["actor"] == AUTH[0]
 
@@ -55,7 +55,7 @@ def test_repeat_upload_returns_original_without_extra_file(pg_client, clean_pdf,
     assert second.json()["duplicate"] is True
     assert second.json()["invoice_id"] == first.json()["invoice_id"]
     assert len(list(settings.storage_dir.iterdir())) == 1
-    assert pg_client.get("/api/v1/invoices", auth=AUTH).json()["total"] == 1
+    assert pg_client.get("/api/v1/invoices", **operator_auth(pg_client)).json()["total"] == 1
 
 
 def test_concurrent_identical_uploads_one_row_and_one_file(
@@ -73,19 +73,38 @@ def test_concurrent_identical_uploads_one_row_and_one_file(
 
 def test_pagination_filter_search_and_bad_parameters(pg_client, clean_pdf):
     upload(pg_client, clean_pdf)
-    page = pg_client.get("/api/v1/invoices?status=RECEIVED&search=voice&page=1&limit=1", auth=AUTH)
+    page = pg_client.get(
+        "/api/v1/invoices?status=RECEIVED&search=voice&page=1&limit=1", **operator_auth(pg_client)
+    )
     assert page.json()["total"] == 1
     assert len(page.json()["items"]) == 1
-    assert pg_client.get("/api/v1/invoices?search=%25", auth=AUTH).json()["total"] == 0
-    assert pg_client.get("/api/v1/invoices?status=POSTED", auth=AUTH).json()["total"] == 0
-    assert pg_client.get("/api/v1/invoices?page=2&limit=1", auth=AUTH).json()["items"] == []
+    assert (
+        pg_client.get("/api/v1/invoices?search=%25", **operator_auth(pg_client)).json()["total"]
+        == 0
+    )
+    assert (
+        pg_client.get("/api/v1/invoices?status=POSTED", **operator_auth(pg_client)).json()["total"]
+        == 0
+    )
+    assert (
+        pg_client.get("/api/v1/invoices?page=2&limit=1", **operator_auth(pg_client)).json()["items"]
+        == []
+    )
     for query in ("limit=0", "limit=101", "page=0", "status=INVALID"):
-        assert pg_client.get("/api/v1/invoices?" + query, auth=AUTH).status_code == 422
+        assert (
+            pg_client.get("/api/v1/invoices?" + query, **operator_auth(pg_client)).status_code
+            == 422
+        )
 
 
 def test_unknown_and_invalid_invoice_ids(pg_client):
-    assert pg_client.get(f"/api/v1/invoices/{uuid.uuid4()}", auth=AUTH).status_code == 404
-    assert pg_client.get("/api/v1/invoices/not-a-uuid", auth=AUTH).status_code == 422
+    assert (
+        pg_client.get(f"/api/v1/invoices/{uuid.uuid4()}", **operator_auth(pg_client)).status_code
+        == 404
+    )
+    assert (
+        pg_client.get("/api/v1/invoices/not-a-uuid", **operator_auth(pg_client)).status_code == 422
+    )
 
 
 def test_vendor_seed_is_repeatable_and_audited(pg_client, pg_engine):
@@ -93,7 +112,7 @@ def test_vendor_seed_is_repeatable_and_audited(pg_client, pg_engine):
         seed_vendors(session)
         seed_vendors(session)
         assert session.scalar(select(func.count()).select_from(AuditEvent)) == 3
-    vendors = pg_client.get("/api/v1/vendors", auth=AUTH).json()
+    vendors = pg_client.get("/api/v1/vendors", **operator_auth(pg_client)).json()
     assert len(vendors) == 3
     assert all(v["is_approved"] for v in vendors)
     assert vendors[0]["baseline_amount_limit"] == "5000.00"
@@ -178,5 +197,5 @@ def test_migration_downgrade_and_upgrade(pg_engine):
         command.upgrade(config, "head")
         assert (
             connection.scalar(text("SELECT version_num FROM alembic_version"))
-            == "0004_integration_delivery"
+            == "0005_cookie_auth"
         )

@@ -14,6 +14,7 @@ from app.core.config import Settings
 from app.core.errors import AppError
 from app.core.middleware import PublicReadOnly, RequestSizeLimit
 from app.db.session import build_engine, build_session_factory
+from app.modules.auth.routes import router as auth_router
 from app.modules.invoices.integration import router as integration_router
 from app.modules.invoices.routes import Db, router
 from app.modules.public_demo import create_public_router, load_public_data
@@ -48,7 +49,7 @@ def create_app(settings: Settings | None = None, engine=None) -> FastAPI:
         allow_origins=settings.cors_origins,
         allow_credentials=True,
         allow_methods=["GET", "POST", "PATCH"],
-        allow_headers=["Authorization", "Content-Type"],
+        allow_headers=["Content-Type", "X-CSRF-Token", "X-Integration-Key", "Idempotency-Key"],
     )
 
     @app.exception_handler(AppError)
@@ -56,7 +57,7 @@ def create_app(settings: Settings | None = None, engine=None) -> FastAPI:
         return JSONResponse(
             {"error": {"code": exc.code, "message": exc.message}},
             status_code=exc.status,
-            headers={"WWW-Authenticate": "Basic"} if exc.status == 401 else None,
+            headers={"Cache-Control": "no-store"},
         )
 
     @app.exception_handler(RequestValidationError)
@@ -114,7 +115,7 @@ def create_app(settings: Settings | None = None, engine=None) -> FastAPI:
     @app.get("/health")
     def health(session: Db):
         revision = session.scalar(text("SELECT version_num FROM alembic_version"))
-        if revision != "0004_integration_delivery":
+        if revision != "0005_cookie_auth":
             raise AppError(
                 503, "MIGRATIONS_REQUIRED", "Apply database migrations before using this backend"
             )
@@ -128,6 +129,7 @@ def create_app(settings: Settings | None = None, engine=None) -> FastAPI:
     def docs():
         return get_swagger_ui_html(openapi_url="/openapi.json", title=app.title)
 
+    app.include_router(auth_router)
     app.include_router(router)
     app.include_router(integration_router)
     return app

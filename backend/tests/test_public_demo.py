@@ -10,7 +10,7 @@ import app.main as main
 from app.core.config import Settings
 from app.core.middleware import PublicReadOnly
 from app.modules import public_demo
-from tests.conftest import AUTH
+from tests.conftest import AUTH, operator_auth
 
 
 @pytest.fixture
@@ -96,7 +96,7 @@ def test_public_restart_and_credentials_cannot_change_read_model(public_client):
     for item in data["items"]:
         public_client.patch(
             f"/api/v1/invoices/{item['id']}",
-            auth=AUTH,
+            **operator_auth(public_client),
             json={"expected_revision": 1, "changes": {"total": "0"}},
         )
     assert public_client.get("/api/v1/invoices?limit=100").json() == before

@@ -76,10 +76,12 @@ def test_real_sdk_wire_contract_and_transient_retry(settings, caplog):
     assert str(result.total) == "1150.00"
     assert len(calls) == 2 and len(sleeps) == 1
     wire = json.loads(calls[-1].content)
+    assert "specialized financial document" in wire["systemInstruction"]["parts"][0]["text"]
+    assert "Never invent" in wire["systemInstruction"]["parts"][0]["text"]
     assert wire["generationConfig"]["responseMimeType"] == "application/json"
-    assert wire["generationConfig"]["responseSchema"]["properties"]["invoice_number"]
+    assert wire["generationConfig"]["responseJsonSchema"]["properties"]["invoice_number"]
     assert wire["contents"][0]["parts"][0]["inlineData"]["mimeType"] == "application/pdf"
-    assert calls[0].extensions["timeout"]["read"] == 10
+    assert calls[0].extensions["timeout"]["read"] == 60
     assert "private-document-text" not in caplog.text
 
 
@@ -100,18 +102,33 @@ def test_sdk_retry_ceiling(settings, status, expected_calls):
     assert all(0 <= delay <= 2.2 for delay in sleeps)
 
 
-def test_sdk_timeout_is_bounded_and_sanitized(settings, caplog):
+@pytest.mark.parametrize(
+    "timeout_type,phase",
+    [
+        (httpx.ConnectTimeout, "connect"),
+        (httpx.ReadTimeout, "read"),
+        (httpx.WriteTimeout, "write"),
+        (httpx.PoolTimeout, "pool"),
+    ],
+)
+def test_sdk_timeout_is_bounded_and_sanitized(settings, caplog, timeout_type, phase, monkeypatch):
+    # Alembic's fileConfig disables existing loggers in preceding integration tests.
+    from app.modules.extraction.gemini import logger
+
+    monkeypatch.setattr(logger, "disabled", False)
+    caplog.set_level("WARNING", logger=logger.name)
     calls, sleeps = [], []
 
     def handler(request):
         calls.append(request)
-        raise httpx.ReadTimeout("private-document-text", request=request)
+        raise timeout_type("private-document-text", request=request)
 
     with pytest.raises(ExtractionError, match="GEMINI_TIMEOUT"):
         sdk_extractor(settings, handler, sleeps).extract(
             ROOT / "fixtures/invoices/clean-001.pdf", "application/pdf"
         )
     assert len(calls) == 3
+    assert f"timeout_phase={phase}" in caplog.text
     assert "private-document-text" not in caplog.text
 
 
