@@ -12,24 +12,26 @@ from starlette.middleware.cors import CORSMiddleware
 from app.core.auth import require_operator
 from app.core.config import Settings
 from app.core.errors import AppError
-from app.core.middleware import RequestSizeLimit
+from app.core.middleware import PublicReadOnly, RequestSizeLimit
 from app.db.session import build_engine, build_session_factory
 from app.modules.invoices.integration import router as integration_router
 from app.modules.invoices.routes import Db, router
+from app.modules.public_demo import create_public_router, load_public_data
 
 
 def create_app(settings: Settings | None = None, engine=None) -> FastAPI:
     settings = settings or Settings()
-    engine = engine or build_engine(settings.database_url)
+    engine = None if settings.public_demo else (engine or build_engine(settings.database_url))
 
     @asynccontextmanager
     async def lifespan(app):
         yield
-        engine.dispose()
+        if engine is not None:
+            engine.dispose()
 
     app = FastAPI(
         title="Invoice Exception Desk",
-        version="0.4.0",
+        version="0.5.0",
         lifespan=lifespan,
         docs_url=None,
         redoc_url=None,
@@ -37,8 +39,10 @@ def create_app(settings: Settings | None = None, engine=None) -> FastAPI:
     )
     app.state.settings = settings
     app.state.engine = engine
-    app.state.session_factory = build_session_factory(engine)
+    app.state.session_factory = build_session_factory(engine) if engine is not None else None
     app.add_middleware(RequestSizeLimit, max_bytes=settings.max_upload_bytes + 64 * 1024)
+    if settings.public_demo:
+        app.add_middleware(PublicReadOnly)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
@@ -82,6 +86,30 @@ def create_app(settings: Settings | None = None, engine=None) -> FastAPI:
             {"error": {"code": "DATABASE_UNAVAILABLE", "message": "Database operation failed"}},
             status_code=503,
         )
+
+    @app.get("/api/v1/config")
+    def configuration():
+        return {
+            "public_demo": settings.public_demo,
+            "read_only": settings.public_demo,
+            "synthetic": settings.public_demo,
+            "ai_mode": settings.ai_mode,
+        }
+
+    if settings.public_demo:
+        data = load_public_data()
+        app.include_router(create_public_router(data))
+
+        @app.get("/health")
+        def public_health():
+            return {
+                "status": "ok",
+                "mode": "public_demo",
+                "database": "not_used",
+                "ai_mode": "mock",
+            }
+
+        return app
 
     @app.get("/health")
     def health(session: Db):

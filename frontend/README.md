@@ -37,6 +37,17 @@ and the Day 5 read-only access policy before publishing.
 
 ## Screens and interaction
 
+At startup the dashboard reads `/api/v1/config`. When the backend reports public
+read-only mode it opens without credentials, labels the synthetic snapshot and
+hides upload, correction/review/post, supplier-create and CSV controls. Fields
+remain disabled and the backend independently rejects all mutations. Use the
+separate public Compose file described in the root README; no frontend secret or
+build-time public-mode flag is needed. Source downloads contain bundled fixtures only.
+
+Public browser test: `npm.cmd run test:e2e -- --config playwright.public.config.ts`.
+It uses ports 3002/8002, no DB or credentials, and records synthetic screenshots/video.
+Stop the public Compose preview before running that test to free the ports.
+
 - `/`: state counts, current duplicate failures, per-currency ledger totals, recent activity.
 - `/invoices/`: paginated search, status/issue filtering, direct upload and processing.
 - `/exceptions/`: needs-review queue with issue filtering.

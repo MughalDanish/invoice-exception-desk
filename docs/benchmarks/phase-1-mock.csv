@@ -1,0 +1,17 @@
+fixture,sha256,status_before_post,expected_hold,prevented_new_ledger_entry,duplicate_file,rule_codes,post_http,error_code,expected_rules_present,expected_error_matches,mock_adapter_matches_answer_key,latency_ms
+clean-001.pdf,298e664a695655b70e69120fccfadba9e1884bd552844c1219edd5d100ec3107,READY_TO_POST,False,False,False,[],200,,True,True,True,842.362
+clean-002.pdf,b1cf6f7fa916889c6e5ebd55bda1f7e20f8d4f4ac60c964ccacc9f2d7030f31f,READY_TO_POST,False,False,False,[],200,,True,True,True,602.41
+clean-003.pdf,ec4988b91ab72bdd3402f666820ee13bb6a47ca68fac9aed139a6648df80471f,READY_TO_POST,False,False,False,[],200,,True,True,True,652.136
+clean-004.pdf,611498523440ad41a992ed1244bbedd21f6402b90b74e1fea706acfc2cab3c6c,READY_TO_POST,False,False,False,[],200,,True,True,True,181.135
+clean-005.pdf,5bfe0fc7e45799797cb6b0b0595d8e1916dc299e729e0b1eb4bccd176a1d41c1,READY_TO_POST,False,False,False,[],200,,True,True,True,155.367
+wrong-total.pdf,caaf5d9708f285123840ad93cd5a6a7769da148982e3bf95edd554dd3d401f58,NEEDS_REVIEW,True,True,False,['TOTAL_MISMATCH'],409,,True,True,True,194.702
+wrong-line.pdf,403ef7c8327a604bd4edc7bc004e082697e2983ecf810eff0359d9201bb45899,NEEDS_REVIEW,True,True,False,['LINE_TOTAL_MISMATCH'],409,,True,True,True,192.395
+wrong-tax.pdf,409aebe27e3ee5f37af2e72827cac95ce783da77f3c6a6fb04e1057657408d1d,NEEDS_REVIEW,True,True,False,['TAX_RATE_MISMATCH'],409,,True,True,True,160.523
+duplicate-copy.pdf,298e664a695655b70e69120fccfadba9e1884bd552844c1219edd5d100ec3107,POSTED,True,True,True,[],200,,True,True,True,79.939
+duplicate-resend.pdf,39fa344a0c380f711ccc16e533f760734b0f0698a34ed205102c0775e3dfc7e0,NEEDS_REVIEW,True,True,False,['DUPLICATE_INVOICE'],409,,True,True,True,154.454
+duplicate-altered.pdf,9687f513b5a4946b318618e3aece20885864d4fb8cc14123628b42879d87d994,NEEDS_REVIEW,True,True,False,['DUPLICATE_INVOICE'],409,,True,True,True,254.63
+unknown-vendor-1.pdf,73de8dc6f54687bf8e335d8f84e7f94dcf9f9ba1482458458845a535ed0a1a40,NEEDS_REVIEW,True,True,False,['UNAPPROVED_VENDOR'],409,,True,True,True,148.449
+unknown-vendor-2.pdf,958b97047c8063ca299c141b207cf2361bec5e63ff5721305e7282534b66f2ea,NEEDS_REVIEW,True,True,False,['UNAPPROVED_VENDOR'],409,,True,True,True,138.372
+missing-invoice_number.pdf,5f62d57a95ac1093dab7f7c7a3e5f6413b380f609613dfc7a0270e29b19cfcb8,NEEDS_REVIEW,True,True,False,['MISSING_REQUIRED_FIELD'],409,,True,True,True,209.99
+missing-invoice_date.pdf,896e894876e520d48d22d1959e6d81f966745b6766cb4947270721dcb689cf4c,NEEDS_REVIEW,True,True,False,['MISSING_REQUIRED_FIELD'],409,,True,True,True,146.352
+extraction-failure.pdf,388c1bf30657e05ac5667a4aacdb277a95f1626e095d10e707c4715964b3636f,EXTRACTION_FAILED,True,True,False,[],409,MOCK_EXTRACTION_FAILED,True,True,True,110.932

@@ -3,8 +3,8 @@
 Catch invoice mistakes before they reach your ledger.
 
 An invoice exception-management demonstration using synthetic invoices.
-Days 1–4 implement ingestion, extraction, validation, human review, safe ledger posting,
-audit history, CSV export, the dashboard and optional local n8n intake.
+Days 1–5 implement ingestion, extraction, validation, human review, safe ledger posting,
+audit history, CSV export, the dashboard, optional n8n intake and a read-only portfolio mode.
 
 ## Stack
 
@@ -34,9 +34,42 @@ document preview, exception review, supplier registration, ledger and audit scre
 plus a separate integration-key intake endpoint with durable delivery receipts and
 an importable n8n workflow. The static export supports future static hosting.
 
-Pending: portfolio deployment and broader QA (Day 5). Gemini's request construction and
+Day 5 adds a fail-closed public synthetic read model, the original 16-fixture
+benchmark, public write-denial tests, deployment configurations, screenshots,
+silent walkthrough and owner learning notes. PostgreSQL remains authoritative for
+the writable workflow; the public process serves only a curated fixture export.
+
+Actual cloud deployment remains pending owner access/authorization. Gemini's request construction and
 failure handling are tested offline with the real SDK and a fake HTTP transport;
 live extraction has not been verified. Gmail and Telegram require account credentials.
+
+The Phase 2 documents are preserved in [docs/phase-2](docs/phase-2/AI_UPGRADE_START_HERE.md).
+The next milestone is Day 6 (typed investigation contracts and one mock graph),
+which has not been implemented and requires separate confirmation.
+
+## Day 5 results and public preview
+
+- Previous milestone rerun: 143 PostgreSQL tests and 2 browser scenarios passed.
+- Day 5 regression: 181 backend tests, 2 operator browser scenarios, and 1 anonymous
+  public-demo browser scenario passed. [Detailed report](docs/day-5-progress.md).
+- [Phase 1 benchmark](docs/benchmark.md): 16 original submissions; 11 held/deduplicated
+  or failed safely, 5 clean posts; no missed holds or false holds in this scripted set.
+  Live-model extraction accuracy is **NOT RUN**, not inferred from mock results.
+- [Screenshots, silent video and two-minute demo script](docs/demo-script.md),
+  [portfolio draft](docs/portfolio.md), [engineering lessons](docs/learning-day-5.md).
+- [Deployment preparation and limits](docs/deployment.md): Render Blueprint and
+  private-VM HTTPS configuration. Nothing has been deployed publicly.
+
+To run a separate local public-mode preview without credentials or a database:
+
+```powershell
+docker compose -f infrastructure/compose.public.yml up -d --build
+```
+
+Open http://localhost:3002. This is a **read-only synthetic snapshot**, including
+bundled source PDFs, not your private database. All mutation methods are rejected,
+even with operator/integration credentials. Restarting preserves the same dataset.
+The original writable operator dashboard remains on http://localhost:3000.
 
 The initial commit is local. GitHub rejected the stored credential; the owner
 authorized continuing locally and deferring publication until access is restored.
@@ -333,21 +366,23 @@ that disagree with the document; approval records a human decision, not authenti
 
 ## Limits
 
-Synthetic local demonstration only. No public dashboard or public write endpoints
-are deployed. Basic auth is for the local operator. Integration intake instead requires
+Synthetic demonstration only. No cloud/public deployment has been performed.
+The public-mode configuration is read-only; Basic auth is for the private local
+operator. Integration intake instead requires
 `X-Integration-Key` and `Idempotency-Key`; all operator routes retain Basic auth.
 Windows filesystem permissions
 inherit from the local account; POSIX modes also restrict files in Linux containers.
 Normal DB failures clean up new files; crash recovery for orphaned files is pending.
 Database triggers protect audit, review, and ledger rows against ordinary UPDATE/
 DELETE, not an administrator changing the schema. No malware scanning, payments,
-or ERP integration is provided. The dashboard is local and writable only after
-operator authentication. Public read-only access is a Day 5 task; do not publish
-this local configuration as an anonymous public demo.
+or ERP integration is provided. The operator dashboard is writable only after
+authentication. Publish only the separate public-mode configuration; the writable
+local stack is not public production authentication.
 
 See [architecture](docs/architecture.md) for decisions and
 [Day 1 progress](docs/day-1-progress.md), [Day 2 progress](docs/day-2-progress.md),
 and [Day 3 progress](docs/day-3-progress.md), [Day 4 progress](docs/day-4-progress.md)
+and [Day 5 progress](docs/day-5-progress.md)
 for actually executed checks.
 
 ## Layout

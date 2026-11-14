@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore", hide_input_in_errors=True)
 
     database_url: str = "postgresql+psycopg://app:app@localhost:5433/invoices"
+    public_demo: bool = False
     ai_mode: Literal["mock", "gemini"] = "mock"
     gemini_api_key: SecretStr = SecretStr("")
     gemini_model: str = ""
@@ -26,6 +27,10 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def require_credentials(self):
+        if self.public_demo:
+            if self.ai_mode != "mock":
+                raise ValueError("Public demonstration requires mock mode")
+            return self
         password = self.demo_basic_password.get_secret_value()
         if not self.demo_basic_user.strip() or not password or password == "CHANGE_ME":
             raise ValueError("Set DEMO_BASIC_USER and DEMO_BASIC_PASSWORD before startup")

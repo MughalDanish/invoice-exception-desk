@@ -4,6 +4,10 @@ FastAPI is a modular monolith. PostgreSQL owns application state. Private files
 are stored under UUID names on a dedicated local directory/volume. The dashboard
 and integrations call the API; no integration owns business rules.
 
+As of Day 5 the writable path below remains the financial authority. Public
+portfolio mode is a separate frozen read model over synthetic fixture responses,
+not a query onto the private database. See the Day 5 section for that boundary.
+
 ```mermaid
 flowchart LR
   Operator --> Web[Next.js static dashboard]
@@ -151,3 +155,35 @@ sends multipart data with bounded retries, then emits a safe result. Gmail and
 Telegram nodes are disabled until account credentials are configured. The CLI
 fixture smoke exercises the actual exported guard, HTTP and result nodes without
 external accounts. It cannot approve or post an invoice.
+
+## Day 5: frozen public read model and measurable baseline
+
+`app.qa` creates random isolated PostgreSQL schemas, drives the real API with mock
+fixtures, measures containment/rule outcomes and exports an explicitly synthetic
+public read model. No existing application rows or original fixture bytes change.
+The public export includes hash-verified bundled sources, not ephemeral uploads.
+
+```mermaid
+flowchart LR
+  QA[Isolated PostgreSQL + real API + mock fixtures] --> Export[Reviewed synthetic JSON export]
+  Visitor --> Static[Next.js static dashboard]
+  Static --> Public[FastAPI PUBLIC_DEMO=true]
+  Public --> Export
+  Public --> PDF[Bundled synthetic PDFs]
+  Public -. no DB engine / no mutation routers .-> Denied[POST / PATCH / DELETE denied]
+```
+
+The public app returns before registering operator/docs/integration routes. Its
+ASGI guard denies mutations before consuming request bytes, regardless of supplied
+credentials, and public startup rejects a live extraction mode. Display controls
+derive from `/api/v1/config`; frontend hiding is not an authorization boundary.
+Anonymous reads are finite and scoped to the committed dataset. Ledger posting,
+approval hashes, business locks and all private transitions remain unchanged.
+
+Tradeoff: the public snapshot is intentionally stale relative to a private ledger.
+Updating it is an explicit export/review/redeploy operation. It survives sleeping
+free hosts without persisting confidential uploads. Neon is optional for a future
+private cloud database, not required merely to serve this portfolio projection.
+
+No investigation/agent state exists yet. Phase 2 starts with Day 6 only after
+separate authorization, retaining this tested baseline and advisory-only policy.

@@ -4,7 +4,7 @@ export class ApiError extends Error {
 }
 export async function request<T>(token: string, path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
-  headers.set("Authorization", `Basic ${token}`);
+  if (token) headers.set("Authorization", `Basic ${token}`);
   if (init.body && !(init.body instanceof FormData)) headers.set("Content-Type", "application/json");
   const res = await fetch(`${API}/api/v1${path}`, { ...init, headers, cache: "no-store" });
   if (!res.ok) {
@@ -14,7 +14,7 @@ export async function request<T>(token: string, path: string, init: RequestInit 
   return res.json() as Promise<T>;
 }
 export async function binary(token: string, path: string): Promise<Blob> {
-  const res = await fetch(`${API}/api/v1${path}`, { headers: { Authorization: `Basic ${token}` }, cache: "no-store" });
+  const res = await fetch(`${API}/api/v1${path}`, { headers: token ? { Authorization: `Basic ${token}` } : {}, cache: "no-store" });
   if (!res.ok) throw new ApiError(res.status, "DOWNLOAD_FAILED", "Unable to download this file. Please try again.");
   return res.blob();
 }

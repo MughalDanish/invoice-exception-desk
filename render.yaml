@@ -1,0 +1,34 @@
+# Preparation only. Creating the Blueprint requires separate owner authorization.
+services:
+  - type: web
+    name: invoice-desk-public-api
+    runtime: docker
+    plan: free
+    dockerContext: .
+    dockerfilePath: backend/Dockerfile
+    dockerCommand: sh -c 'exec uvicorn app.main:create_app --factory --host 0.0.0.0 --port ${PORT:-8000}'
+    healthCheckPath: /health
+    envVars:
+      - key: PUBLIC_DEMO
+        value: "true"
+      - key: AI_MODE
+        value: mock
+      - key: CORS_ORIGINS
+        sync: false
+  - type: web
+    name: invoice-desk-public-dashboard
+    runtime: static
+    buildCommand: cd frontend && npm ci --no-audit --no-fund && npm run build
+    staticPublishPath: frontend/out
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NEXT_PUBLIC_API_BASE_URL
+        sync: false
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin

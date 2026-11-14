@@ -42,3 +42,24 @@ class RequestSizeLimit:
             await self.app(scope, bounded_receive, send)
         except BodyTooLarge:
             await response(scope, receive, send)
+
+
+class PublicReadOnly:
+    """Deny mutations before body parsing, including unknown future endpoints."""
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http" and scope["method"] not in ("GET", "HEAD", "OPTIONS"):
+            response = JSONResponse(
+                {
+                    "error": {
+                        "code": "PUBLIC_DEMO_READ_ONLY",
+                        "message": "Synthetic public demonstration is read-only",
+                    }
+                },
+                status_code=403,
+            )
+            return await response(scope, receive, send)
+        return await self.app(scope, receive, send)

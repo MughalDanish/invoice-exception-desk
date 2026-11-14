@@ -1,0 +1,286 @@
+{
+  "dataset": "phase-1-original-16-v1",
+  "generated_at": "2026-11-14T07:13:49.181556+00:00",
+  "provider": "mock",
+  "live_model_quality": "NOT RUN",
+  "field_extraction_accuracy": "NOT RUN: scripted replay is not independent extraction",
+  "latency_scope": "upload + processing + detail + posting attempt + ledger read; excludes schema setup/reference seeding",
+  "case_count": 16,
+  "distinct_file_hashes": 15,
+  "tp": 11,
+  "fp": 0,
+  "fn": 0,
+  "tn": 5,
+  "rule_validation": {
+    "case_count": 14,
+    "tp": 9,
+    "fp": 0,
+    "fn": 0,
+    "tn": 5
+  },
+  "precision": 1.0,
+  "recall": 1.0,
+  "p50_ms": 160.523,
+  "p95_ms": 842.362,
+  "all_contracts_passed": true,
+  "cases": [
+    {
+      "fixture": "clean-001.pdf",
+      "sha256": "298e664a695655b70e69120fccfadba9e1884bd552844c1219edd5d100ec3107",
+      "status_before_post": "READY_TO_POST",
+      "expected_hold": false,
+      "prevented_new_ledger_entry": false,
+      "duplicate_file": false,
+      "rule_codes": [],
+      "post_http": 200,
+      "error_code": null,
+      "expected_rules_present": true,
+      "expected_error_matches": true,
+      "mock_adapter_matches_answer_key": true,
+      "latency_ms": 842.362
+    },
+    {
+      "fixture": "clean-002.pdf",
+      "sha256": "b1cf6f7fa916889c6e5ebd55bda1f7e20f8d4f4ac60c964ccacc9f2d7030f31f",
+      "status_before_post": "READY_TO_POST",
+      "expected_hold": false,
+      "prevented_new_ledger_entry": false,
+      "duplicate_file": false,
+      "rule_codes": [],
+      "post_http": 200,
+      "error_code": null,
+      "expected_rules_present": true,
+      "expected_error_matches": true,
+      "mock_adapter_matches_answer_key": true,
+      "latency_ms": 602.41
+    },
+    {
+      "fixture": "clean-003.pdf",
+      "sha256": "ec4988b91ab72bdd3402f666820ee13bb6a47ca68fac9aed139a6648df80471f",
+      "status_before_post": "READY_TO_POST",
+      "expected_hold": false,
+      "prevented_new_ledger_entry": false,
+      "duplicate_file": false,
+      "rule_codes": [],
+      "post_http": 200,
+      "error_code": null,
+      "expected_rules_present": true,
+      "expected_error_matches": true,
+      "mock_adapter_matches_answer_key": true,
+      "latency_ms": 652.136
+    },
+    {
+      "fixture": "clean-004.pdf",
+      "sha256": "611498523440ad41a992ed1244bbedd21f6402b90b74e1fea706acfc2cab3c6c",
+      "status_before_post": "READY_TO_POST",
+      "expected_hold": false,
+      "prevented_new_ledger_entry": false,
+      "duplicate_file": false,
+      "rule_codes": [],
+      "post_http": 200,
+      "error_code": null,
+      "expected_rules_present": true,
+      "expected_error_matches": true,
+      "mock_adapter_matches_answer_key": true,
+      "latency_ms": 181.135
+    },
+    {
+      "fixture": "clean-005.pdf",
+      "sha256": "5bfe0fc7e45799797cb6b0b0595d8e1916dc299e729e0b1eb4bccd176a1d41c1",
+      "status_before_post": "READY_TO_POST",
+      "expected_hold": false,
+      "prevented_new_ledger_entry": false,
+      "duplicate_file": false,
+      "rule_codes": [],
+      "post_http": 200,
+      "error_code": null,
+      "expected_rules_present": true,
+      "expected_error_matches": true,
+      "mock_adapter_matches_answer_key": true,
+      "latency_ms": 155.367
+    },
+    {
+      "fixture": "wrong-total.pdf",
+      "sha256": "caaf5d9708f285123840ad93cd5a6a7769da148982e3bf95edd554dd3d401f58",
+      "status_before_post": "NEEDS_REVIEW",
+      "expected_hold": true,
+      "prevented_new_ledger_entry": true,
+      "duplicate_file": false,
+      "rule_codes": [
+        "TOTAL_MISMATCH"
+      ],
+      "post_http": 409,
+      "error_code": null,
+      "expected_rules_present": true,
+      "expected_error_matches": true,
+      "mock_adapter_matches_answer_key": true,
+      "latency_ms": 194.702
+    },
+    {
+      "fixture": "wrong-line.pdf",
+      "sha256": "403ef7c8327a604bd4edc7bc004e082697e2983ecf810eff0359d9201bb45899",
+      "status_before_post": "NEEDS_REVIEW",
+      "expected_hold": true,
+      "prevented_new_ledger_entry": true,
+      "duplicate_file": false,
+      "rule_codes": [
+        "LINE_TOTAL_MISMATCH"
+      ],
+      "post_http": 409,
+      "error_code": null,
+      "expected_rules_present": true,
+      "expected_error_matches": true,
+      "mock_adapter_matches_answer_key": true,
+      "latency_ms": 192.395
+    },
+    {
+      "fixture": "wrong-tax.pdf",
+      "sha256": "409aebe27e3ee5f37af2e72827cac95ce783da77f3c6a6fb04e1057657408d1d",
+      "status_before_post": "NEEDS_REVIEW",
+      "expected_hold": true,
+      "prevented_new_ledger_entry": true,
+      "duplicate_file": false,
+      "rule_codes": [
+        "TAX_RATE_MISMATCH"
+      ],
+      "post_http": 409,
+      "error_code": null,
+      "expected_rules_present": true,
+      "expected_error_matches": true,
+      "mock_adapter_matches_answer_key": true,
+      "latency_ms": 160.523
+    },
+    {
+      "fixture": "duplicate-copy.pdf",
+      "sha256": "298e664a695655b70e69120fccfadba9e1884bd552844c1219edd5d100ec3107",
+      "status_before_post": "POSTED",
+      "expected_hold": true,
+      "prevented_new_ledger_entry": true,
+      "duplicate_file": true,
+      "rule_codes": [],
+      "post_http": 200,
+      "error_code": null,
+      "expected_rules_present": true,
+      "expected_error_matches": true,
+      "mock_adapter_matches_answer_key": true,
+      "latency_ms": 79.939
+    },
+    {
+      "fixture": "duplicate-resend.pdf",
+      "sha256": "39fa344a0c380f711ccc16e533f760734b0f0698a34ed205102c0775e3dfc7e0",
+      "status_before_post": "NEEDS_REVIEW",
+      "expected_hold": true,
+      "prevented_new_ledger_entry": true,
+      "duplicate_file": false,
+      "rule_codes": [
+        "DUPLICATE_INVOICE"
+      ],
+      "post_http": 409,
+      "error_code": null,
+      "expected_rules_present": true,
+      "expected_error_matches": true,
+      "mock_adapter_matches_answer_key": true,
+      "latency_ms": 154.454
+    },
+    {
+      "fixture": "duplicate-altered.pdf",
+      "sha256": "9687f513b5a4946b318618e3aece20885864d4fb8cc14123628b42879d87d994",
+      "status_before_post": "NEEDS_REVIEW",
+      "expected_hold": true,
+      "prevented_new_ledger_entry": true,
+      "duplicate_file": false,
+      "rule_codes": [
+        "DUPLICATE_INVOICE"
+      ],
+      "post_http": 409,
+      "error_code": null,
+      "expected_rules_present": true,
+      "expected_error_matches": true,
+      "mock_adapter_matches_answer_key": true,
+      "latency_ms": 254.63
+    },
+    {
+      "fixture": "unknown-vendor-1.pdf",
+      "sha256": "73de8dc6f54687bf8e335d8f84e7f94dcf9f9ba1482458458845a535ed0a1a40",
+      "status_before_post": "NEEDS_REVIEW",
+      "expected_hold": true,
+      "prevented_new_ledger_entry": true,
+      "duplicate_file": false,
+      "rule_codes": [
+        "UNAPPROVED_VENDOR"
+      ],
+      "post_http": 409,
+      "error_code": null,
+      "expected_rules_present": true,
+      "expected_error_matches": true,
+      "mock_adapter_matches_answer_key": true,
+      "latency_ms": 148.449
+    },
+    {
+      "fixture": "unknown-vendor-2.pdf",
+      "sha256": "958b97047c8063ca299c141b207cf2361bec5e63ff5721305e7282534b66f2ea",
+      "status_before_post": "NEEDS_REVIEW",
+      "expected_hold": true,
+      "prevented_new_ledger_entry": true,
+      "duplicate_file": false,
+      "rule_codes": [
+        "UNAPPROVED_VENDOR"
+      ],
+      "post_http": 409,
+      "error_code": null,
+      "expected_rules_present": true,
+      "expected_error_matches": true,
+      "mock_adapter_matches_answer_key": true,
+      "latency_ms": 138.372
+    },
+    {
+      "fixture": "missing-invoice_number.pdf",
+      "sha256": "5f62d57a95ac1093dab7f7c7a3e5f6413b380f609613dfc7a0270e29b19cfcb8",
+      "status_before_post": "NEEDS_REVIEW",
+      "expected_hold": true,
+      "prevented_new_ledger_entry": true,
+      "duplicate_file": false,
+      "rule_codes": [
+        "MISSING_REQUIRED_FIELD"
+      ],
+      "post_http": 409,
+      "error_code": null,
+      "expected_rules_present": true,
+      "expected_error_matches": true,
+      "mock_adapter_matches_answer_key": true,
+      "latency_ms": 209.99
+    },
+    {
+      "fixture": "missing-invoice_date.pdf",
+      "sha256": "896e894876e520d48d22d1959e6d81f966745b6766cb4947270721dcb689cf4c",
+      "status_before_post": "NEEDS_REVIEW",
+      "expected_hold": true,
+      "prevented_new_ledger_entry": true,
+      "duplicate_file": false,
+      "rule_codes": [
+        "MISSING_REQUIRED_FIELD"
+      ],
+      "post_http": 409,
+      "error_code": null,
+      "expected_rules_present": true,
+      "expected_error_matches": true,
+      "mock_adapter_matches_answer_key": true,
+      "latency_ms": 146.352
+    },
+    {
+      "fixture": "extraction-failure.pdf",
+      "sha256": "388c1bf30657e05ac5667a4aacdb277a95f1626e095d10e707c4715964b3636f",
+      "status_before_post": "EXTRACTION_FAILED",
+      "expected_hold": true,
+      "prevented_new_ledger_entry": true,
+      "duplicate_file": false,
+      "rule_codes": [],
+      "post_http": 409,
+      "error_code": "MOCK_EXTRACTION_FAILED",
+      "expected_rules_present": true,
+      "expected_error_matches": true,
+      "mock_adapter_matches_answer_key": true,
+      "latency_ms": 110.932
+    }
+  ]
+}

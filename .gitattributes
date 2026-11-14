@@ -1,5 +1,7 @@
 * text=auto eol=lf
 *.pdf binary
+*.webm binary
+docs/phase-2/*.md -text
 *.png binary
 *.jpg binary
 *.jpeg binary

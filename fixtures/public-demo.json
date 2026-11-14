@@ -1,0 +1,4649 @@
+{
+  "version": 1,
+  "synthetic": true,
+  "provenance": "isolated PostgreSQL, original fixtures, mock extraction, explicit clean-001 posting",
+  "invoices": [
+    {
+      "id": "97c1ba09-1d02-4e12-935a-af7b2caa81f9",
+      "source": "api",
+      "filename": "clean-001.pdf",
+      "mime_type": "application/pdf",
+      "sha256": "298e664a695655b70e69120fccfadba9e1884bd552844c1219edd5d100ec3107",
+      "byte_size": 1015,
+      "status": "POSTED",
+      "revision": 1,
+      "review_required": false,
+      "validation_run_id": "e412299d-65ba-4e05-aeea-8f23a98313cb",
+      "validated_revision": 1,
+      "vendor_id": "4a6de922-f923-473b-9f30-2c446ba2f79d",
+      "created_at": "2026-11-14T07:04:01.389829Z",
+      "updated_at": "2026-11-14T07:04:01.495901Z",
+      "current_data": {
+        "total": "1150.00",
+        "currency": "USD",
+        "due_date": "2026-11-30",
+        "evidence": {
+          "total": "USD 1150.00",
+          "invoice_number": "INV-A-001"
+        },
+        "subtotal": "1000.00",
+        "tax_rate": "0.15",
+        "line_items": [
+          {
+            "quantity": "10",
+            "line_total": "1000.00",
+            "unit_price": "100.00",
+            "description": "Office paper"
+          }
+        ],
+        "tax_amount": "150.00",
+        "vendor_name": "Alpha Office Supplies",
+        "invoice_date": "2026-11-13",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-A-001",
+        "uncertain_fields": []
+      },
+      "issue_codes": [],
+      "extracted_data": {
+        "total": "1150.00",
+        "currency": "USD",
+        "due_date": "2026-11-30",
+        "evidence": {
+          "total": "USD 1150.00",
+          "invoice_number": "INV-A-001"
+        },
+        "subtotal": "1000.00",
+        "tax_rate": "0.15",
+        "line_items": [
+          {
+            "quantity": "10",
+            "line_total": "1000.00",
+            "unit_price": "100.00",
+            "description": "Office paper"
+          }
+        ],
+        "tax_amount": "150.00",
+        "vendor_name": "Alpha Office Supplies",
+        "invoice_date": "2026-11-13",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-A-001",
+        "uncertain_fields": []
+      },
+      "validations": [
+        {
+          "rule_code": "TAX_RATE_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Explicit tax rate times subtotal must equal tax amount",
+          "expected": {
+            "amount": "150.00"
+          },
+          "observed": {
+            "amount": "150.00"
+          }
+        },
+        {
+          "rule_code": "ARITHMETIC_INCOMPLETE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Line items, subtotal, tax amount, and total must be available for arithmetic checks",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "SUBTOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Line totals must sum to subtotal",
+          "expected": {
+            "amount": "1000.00"
+          },
+          "observed": {
+            "amount": "1000.00"
+          }
+        },
+        {
+          "rule_code": "TOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Subtotal plus tax must equal total",
+          "expected": {
+            "amount": "1150.00"
+          },
+          "observed": {
+            "amount": "1150.00"
+          }
+        },
+        {
+          "rule_code": "UNCERTAIN_EXTRACTION",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Uncertain fields or missing source evidence need correction",
+          "expected": null,
+          "observed": {
+            "fields": []
+          }
+        },
+        {
+          "rule_code": "INVALID_DATE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Dates must be valid ISO calendar dates",
+          "expected": null,
+          "observed": {
+            "invalid_fields": []
+          }
+        },
+        {
+          "rule_code": "CURRENCY_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Currency must match supplier policy",
+          "expected": {
+            "currency": "USD"
+          },
+          "observed": {
+            "currency": "USD"
+          }
+        },
+        {
+          "rule_code": "DUPLICATE_INVOICE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Supplier and invoice number must be unique",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "INVALID_TAX_RATE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Explicit tax rate must be a fraction between zero and one",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "AMOUNT_RANGE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Amounts must fit the ledger's numeric(18,2) range",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "MONEY_PRECISION",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Amounts must use the currency's minor-unit precision",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "AMOUNT_OUTLIER",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Total must not exceed the supplier's configured threshold",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "LINE_TOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Quantity times unit price must match line total",
+          "expected": null,
+          "observed": {
+            "mismatches": []
+          }
+        },
+        {
+          "rule_code": "UNAPPROVED_VENDOR",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Supplier must be approved",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "INVALID_DATE_RANGE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Due date must not precede invoice date",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "MISSING_REQUIRED_FIELD",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Required invoice fields",
+          "expected": {
+            "fields": [
+              "vendor_name",
+              "invoice_number",
+              "invoice_date",
+              "currency",
+              "total"
+            ]
+          },
+          "observed": {
+            "missing": []
+          }
+        },
+        {
+          "rule_code": "UNSUPPORTED_CURRENCY",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Currency must be supported by the demo ledger",
+          "expected": {
+            "currencies": [
+              "USD",
+              "EUR",
+              "GBP",
+              "JPY"
+            ]
+          },
+          "observed": {
+            "currency": "USD"
+          }
+        },
+        {
+          "rule_code": "NEGATIVE_AMOUNT",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Negative invoices and credit notes are outside the MVP",
+          "expected": null,
+          "observed": null
+        }
+      ],
+      "processing_attempts": [
+        {
+          "id": "a45248e1-b1bc-4b10-a91a-588ff4acf072",
+          "ordinal": 1,
+          "status": "SUCCEEDED",
+          "created_at": "2026-11-14T07:04:01.420407Z",
+          "finished_at": "2026-11-14T07:04:01.456090Z",
+          "error_code": null
+        }
+      ],
+      "reviews": [],
+      "ledger_entry_id": "08d0cfe6-7f71-4619-8a6f-31343e4671e5"
+    },
+    {
+      "id": "d2694bf1-5f1d-4740-8143-3081de5e1a0c",
+      "source": "api",
+      "filename": "clean-002.pdf",
+      "mime_type": "application/pdf",
+      "sha256": "b1cf6f7fa916889c6e5ebd55bda1f7e20f8d4f4ac60c964ccacc9f2d7030f31f",
+      "byte_size": 1015,
+      "status": "READY_TO_POST",
+      "revision": 1,
+      "review_required": false,
+      "validation_run_id": "af65630d-bbf2-472c-9193-ca8a882f7d11",
+      "validated_revision": 1,
+      "vendor_id": "4a6de922-f923-473b-9f30-2c446ba2f79d",
+      "created_at": "2026-11-14T07:04:01.532957Z",
+      "updated_at": "2026-11-14T07:04:01.557777Z",
+      "current_data": {
+        "total": "1150.00",
+        "currency": "USD",
+        "due_date": "2026-11-30",
+        "evidence": {
+          "total": "USD 1150.00",
+          "invoice_number": "INV-A-002"
+        },
+        "subtotal": "1000.00",
+        "tax_rate": "0.15",
+        "line_items": [
+          {
+            "quantity": "10",
+            "line_total": "1000.00",
+            "unit_price": "100.00",
+            "description": "Office paper"
+          }
+        ],
+        "tax_amount": "150.00",
+        "vendor_name": "Alpha Office Supplies",
+        "invoice_date": "2026-11-13",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-A-002",
+        "uncertain_fields": []
+      },
+      "issue_codes": [],
+      "extracted_data": {
+        "total": "1150.00",
+        "currency": "USD",
+        "due_date": "2026-11-30",
+        "evidence": {
+          "total": "USD 1150.00",
+          "invoice_number": "INV-A-002"
+        },
+        "subtotal": "1000.00",
+        "tax_rate": "0.15",
+        "line_items": [
+          {
+            "quantity": "10",
+            "line_total": "1000.00",
+            "unit_price": "100.00",
+            "description": "Office paper"
+          }
+        ],
+        "tax_amount": "150.00",
+        "vendor_name": "Alpha Office Supplies",
+        "invoice_date": "2026-11-13",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-A-002",
+        "uncertain_fields": []
+      },
+      "validations": [
+        {
+          "rule_code": "MISSING_REQUIRED_FIELD",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Required invoice fields",
+          "expected": {
+            "fields": [
+              "vendor_name",
+              "invoice_number",
+              "invoice_date",
+              "currency",
+              "total"
+            ]
+          },
+          "observed": {
+            "missing": []
+          }
+        },
+        {
+          "rule_code": "LINE_TOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Quantity times unit price must match line total",
+          "expected": null,
+          "observed": {
+            "mismatches": []
+          }
+        },
+        {
+          "rule_code": "SUBTOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Line totals must sum to subtotal",
+          "expected": {
+            "amount": "1000.00"
+          },
+          "observed": {
+            "amount": "1000.00"
+          }
+        },
+        {
+          "rule_code": "ARITHMETIC_INCOMPLETE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Line items, subtotal, tax amount, and total must be available for arithmetic checks",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "TOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Subtotal plus tax must equal total",
+          "expected": {
+            "amount": "1150.00"
+          },
+          "observed": {
+            "amount": "1150.00"
+          }
+        },
+        {
+          "rule_code": "INVALID_TAX_RATE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Explicit tax rate must be a fraction between zero and one",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "MONEY_PRECISION",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Amounts must use the currency's minor-unit precision",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "UNAPPROVED_VENDOR",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Supplier must be approved",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "DUPLICATE_INVOICE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Supplier and invoice number must be unique",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "AMOUNT_RANGE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Amounts must fit the ledger's numeric(18,2) range",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "CURRENCY_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Currency must match supplier policy",
+          "expected": {
+            "currency": "USD"
+          },
+          "observed": {
+            "currency": "USD"
+          }
+        },
+        {
+          "rule_code": "NEGATIVE_AMOUNT",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Negative invoices and credit notes are outside the MVP",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "TAX_RATE_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Explicit tax rate times subtotal must equal tax amount",
+          "expected": {
+            "amount": "150.00"
+          },
+          "observed": {
+            "amount": "150.00"
+          }
+        },
+        {
+          "rule_code": "AMOUNT_OUTLIER",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Total must not exceed the supplier's configured threshold",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "UNSUPPORTED_CURRENCY",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Currency must be supported by the demo ledger",
+          "expected": {
+            "currencies": [
+              "USD",
+              "EUR",
+              "GBP",
+              "JPY"
+            ]
+          },
+          "observed": {
+            "currency": "USD"
+          }
+        },
+        {
+          "rule_code": "INVALID_DATE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Dates must be valid ISO calendar dates",
+          "expected": null,
+          "observed": {
+            "invalid_fields": []
+          }
+        },
+        {
+          "rule_code": "UNCERTAIN_EXTRACTION",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Uncertain fields or missing source evidence need correction",
+          "expected": null,
+          "observed": {
+            "fields": []
+          }
+        },
+        {
+          "rule_code": "INVALID_DATE_RANGE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Due date must not precede invoice date",
+          "expected": null,
+          "observed": null
+        }
+      ],
+      "processing_attempts": [
+        {
+          "id": "7475a96d-3562-4559-8b40-56b6c6b02c4c",
+          "ordinal": 1,
+          "status": "SUCCEEDED",
+          "created_at": "2026-11-14T07:04:01.548469Z",
+          "finished_at": "2026-11-14T07:04:01.567151Z",
+          "error_code": null
+        }
+      ],
+      "reviews": [],
+      "ledger_entry_id": null
+    },
+    {
+      "id": "66844c63-c4c0-4b38-ae47-7af7c53d2131",
+      "source": "api",
+      "filename": "clean-003.pdf",
+      "mime_type": "application/pdf",
+      "sha256": "ec4988b91ab72bdd3402f666820ee13bb6a47ca68fac9aed139a6648df80471f",
+      "byte_size": 1015,
+      "status": "READY_TO_POST",
+      "revision": 1,
+      "review_required": false,
+      "validation_run_id": "d2e6acac-5eb9-4d6b-8a28-ab469f200314",
+      "validated_revision": 1,
+      "vendor_id": "4a6de922-f923-473b-9f30-2c446ba2f79d",
+      "created_at": "2026-11-14T07:04:01.588333Z",
+      "updated_at": "2026-11-14T07:04:01.616328Z",
+      "current_data": {
+        "total": "1150.00",
+        "currency": "USD",
+        "due_date": "2026-11-30",
+        "evidence": {
+          "total": "USD 1150.00",
+          "invoice_number": "INV-A-003"
+        },
+        "subtotal": "1000.00",
+        "tax_rate": "0.15",
+        "line_items": [
+          {
+            "quantity": "10",
+            "line_total": "1000.00",
+            "unit_price": "100.00",
+            "description": "Office paper"
+          }
+        ],
+        "tax_amount": "150.00",
+        "vendor_name": "Alpha Office Supplies",
+        "invoice_date": "2026-11-13",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-A-003",
+        "uncertain_fields": []
+      },
+      "issue_codes": [],
+      "extracted_data": {
+        "total": "1150.00",
+        "currency": "USD",
+        "due_date": "2026-11-30",
+        "evidence": {
+          "total": "USD 1150.00",
+          "invoice_number": "INV-A-003"
+        },
+        "subtotal": "1000.00",
+        "tax_rate": "0.15",
+        "line_items": [
+          {
+            "quantity": "10",
+            "line_total": "1000.00",
+            "unit_price": "100.00",
+            "description": "Office paper"
+          }
+        ],
+        "tax_amount": "150.00",
+        "vendor_name": "Alpha Office Supplies",
+        "invoice_date": "2026-11-13",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-A-003",
+        "uncertain_fields": []
+      },
+      "validations": [
+        {
+          "rule_code": "UNSUPPORTED_CURRENCY",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Currency must be supported by the demo ledger",
+          "expected": {
+            "currencies": [
+              "USD",
+              "EUR",
+              "GBP",
+              "JPY"
+            ]
+          },
+          "observed": {
+            "currency": "USD"
+          }
+        },
+        {
+          "rule_code": "TOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Subtotal plus tax must equal total",
+          "expected": {
+            "amount": "1150.00"
+          },
+          "observed": {
+            "amount": "1150.00"
+          }
+        },
+        {
+          "rule_code": "MONEY_PRECISION",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Amounts must use the currency's minor-unit precision",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "LINE_TOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Quantity times unit price must match line total",
+          "expected": null,
+          "observed": {
+            "mismatches": []
+          }
+        },
+        {
+          "rule_code": "AMOUNT_OUTLIER",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Total must not exceed the supplier's configured threshold",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "DUPLICATE_INVOICE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Supplier and invoice number must be unique",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "INVALID_DATE_RANGE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Due date must not precede invoice date",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "MISSING_REQUIRED_FIELD",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Required invoice fields",
+          "expected": {
+            "fields": [
+              "vendor_name",
+              "invoice_number",
+              "invoice_date",
+              "currency",
+              "total"
+            ]
+          },
+          "observed": {
+            "missing": []
+          }
+        },
+        {
+          "rule_code": "TAX_RATE_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Explicit tax rate times subtotal must equal tax amount",
+          "expected": {
+            "amount": "150.00"
+          },
+          "observed": {
+            "amount": "150.00"
+          }
+        },
+        {
+          "rule_code": "ARITHMETIC_INCOMPLETE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Line items, subtotal, tax amount, and total must be available for arithmetic checks",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "CURRENCY_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Currency must match supplier policy",
+          "expected": {
+            "currency": "USD"
+          },
+          "observed": {
+            "currency": "USD"
+          }
+        },
+        {
+          "rule_code": "AMOUNT_RANGE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Amounts must fit the ledger's numeric(18,2) range",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "NEGATIVE_AMOUNT",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Negative invoices and credit notes are outside the MVP",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "INVALID_TAX_RATE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Explicit tax rate must be a fraction between zero and one",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "UNAPPROVED_VENDOR",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Supplier must be approved",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "INVALID_DATE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Dates must be valid ISO calendar dates",
+          "expected": null,
+          "observed": {
+            "invalid_fields": []
+          }
+        },
+        {
+          "rule_code": "SUBTOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Line totals must sum to subtotal",
+          "expected": {
+            "amount": "1000.00"
+          },
+          "observed": {
+            "amount": "1000.00"
+          }
+        },
+        {
+          "rule_code": "UNCERTAIN_EXTRACTION",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Uncertain fields or missing source evidence need correction",
+          "expected": null,
+          "observed": {
+            "fields": []
+          }
+        }
+      ],
+      "processing_attempts": [
+        {
+          "id": "beec6dae-f2ed-4efe-b17d-455e49839319",
+          "ordinal": 1,
+          "status": "SUCCEEDED",
+          "created_at": "2026-11-14T07:04:01.606855Z",
+          "finished_at": "2026-11-14T07:04:01.624559Z",
+          "error_code": null
+        }
+      ],
+      "reviews": [],
+      "ledger_entry_id": null
+    },
+    {
+      "id": "e84b0871-834f-41b9-8f78-dbdc797db864",
+      "source": "api",
+      "filename": "clean-004.pdf",
+      "mime_type": "application/pdf",
+      "sha256": "611498523440ad41a992ed1244bbedd21f6402b90b74e1fea706acfc2cab3c6c",
+      "byte_size": 1015,
+      "status": "READY_TO_POST",
+      "revision": 1,
+      "review_required": false,
+      "validation_run_id": "e4bc867a-bca6-434f-966f-72a62245ffc9",
+      "validated_revision": 1,
+      "vendor_id": "4a6de922-f923-473b-9f30-2c446ba2f79d",
+      "created_at": "2026-11-14T07:04:01.645860Z",
+      "updated_at": "2026-11-14T07:04:01.673596Z",
+      "current_data": {
+        "total": "1150.00",
+        "currency": "USD",
+        "due_date": "2026-11-30",
+        "evidence": {
+          "total": "USD 1150.00",
+          "invoice_number": "INV-A-004"
+        },
+        "subtotal": "1000.00",
+        "tax_rate": "0.15",
+        "line_items": [
+          {
+            "quantity": "10",
+            "line_total": "1000.00",
+            "unit_price": "100.00",
+            "description": "Office paper"
+          }
+        ],
+        "tax_amount": "150.00",
+        "vendor_name": "Alpha Office Supplies",
+        "invoice_date": "2026-11-13",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-A-004",
+        "uncertain_fields": []
+      },
+      "issue_codes": [],
+      "extracted_data": {
+        "total": "1150.00",
+        "currency": "USD",
+        "due_date": "2026-11-30",
+        "evidence": {
+          "total": "USD 1150.00",
+          "invoice_number": "INV-A-004"
+        },
+        "subtotal": "1000.00",
+        "tax_rate": "0.15",
+        "line_items": [
+          {
+            "quantity": "10",
+            "line_total": "1000.00",
+            "unit_price": "100.00",
+            "description": "Office paper"
+          }
+        ],
+        "tax_amount": "150.00",
+        "vendor_name": "Alpha Office Supplies",
+        "invoice_date": "2026-11-13",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-A-004",
+        "uncertain_fields": []
+      },
+      "validations": [
+        {
+          "rule_code": "MONEY_PRECISION",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Amounts must use the currency's minor-unit precision",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "LINE_TOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Quantity times unit price must match line total",
+          "expected": null,
+          "observed": {
+            "mismatches": []
+          }
+        },
+        {
+          "rule_code": "UNAPPROVED_VENDOR",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Supplier must be approved",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "INVALID_DATE_RANGE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Due date must not precede invoice date",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "SUBTOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Line totals must sum to subtotal",
+          "expected": {
+            "amount": "1000.00"
+          },
+          "observed": {
+            "amount": "1000.00"
+          }
+        },
+        {
+          "rule_code": "AMOUNT_RANGE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Amounts must fit the ledger's numeric(18,2) range",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "AMOUNT_OUTLIER",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Total must not exceed the supplier's configured threshold",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "ARITHMETIC_INCOMPLETE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Line items, subtotal, tax amount, and total must be available for arithmetic checks",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "MISSING_REQUIRED_FIELD",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Required invoice fields",
+          "expected": {
+            "fields": [
+              "vendor_name",
+              "invoice_number",
+              "invoice_date",
+              "currency",
+              "total"
+            ]
+          },
+          "observed": {
+            "missing": []
+          }
+        },
+        {
+          "rule_code": "UNCERTAIN_EXTRACTION",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Uncertain fields or missing source evidence need correction",
+          "expected": null,
+          "observed": {
+            "fields": []
+          }
+        },
+        {
+          "rule_code": "INVALID_TAX_RATE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Explicit tax rate must be a fraction between zero and one",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "INVALID_DATE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Dates must be valid ISO calendar dates",
+          "expected": null,
+          "observed": {
+            "invalid_fields": []
+          }
+        },
+        {
+          "rule_code": "UNSUPPORTED_CURRENCY",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Currency must be supported by the demo ledger",
+          "expected": {
+            "currencies": [
+              "USD",
+              "EUR",
+              "GBP",
+              "JPY"
+            ]
+          },
+          "observed": {
+            "currency": "USD"
+          }
+        },
+        {
+          "rule_code": "CURRENCY_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Currency must match supplier policy",
+          "expected": {
+            "currency": "USD"
+          },
+          "observed": {
+            "currency": "USD"
+          }
+        },
+        {
+          "rule_code": "TOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Subtotal plus tax must equal total",
+          "expected": {
+            "amount": "1150.00"
+          },
+          "observed": {
+            "amount": "1150.00"
+          }
+        },
+        {
+          "rule_code": "TAX_RATE_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Explicit tax rate times subtotal must equal tax amount",
+          "expected": {
+            "amount": "150.00"
+          },
+          "observed": {
+            "amount": "150.00"
+          }
+        },
+        {
+          "rule_code": "NEGATIVE_AMOUNT",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Negative invoices and credit notes are outside the MVP",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "DUPLICATE_INVOICE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Supplier and invoice number must be unique",
+          "expected": null,
+          "observed": null
+        }
+      ],
+      "processing_attempts": [
+        {
+          "id": "de5bf53a-395f-4746-adb1-f54bff80bbdf",
+          "ordinal": 1,
+          "status": "SUCCEEDED",
+          "created_at": "2026-11-14T07:04:01.663796Z",
+          "finished_at": "2026-11-14T07:04:01.681650Z",
+          "error_code": null
+        }
+      ],
+      "reviews": [],
+      "ledger_entry_id": null
+    },
+    {
+      "id": "04b10117-04cb-4f40-a4a1-65207c018a32",
+      "source": "api",
+      "filename": "clean-005.pdf",
+      "mime_type": "application/pdf",
+      "sha256": "5bfe0fc7e45799797cb6b0b0595d8e1916dc299e729e0b1eb4bccd176a1d41c1",
+      "byte_size": 1015,
+      "status": "READY_TO_POST",
+      "revision": 1,
+      "review_required": false,
+      "validation_run_id": "afd2e6b4-edd6-4ecf-b427-0642452c3f71",
+      "validated_revision": 1,
+      "vendor_id": "4a6de922-f923-473b-9f30-2c446ba2f79d",
+      "created_at": "2026-11-14T07:04:01.702157Z",
+      "updated_at": "2026-11-14T07:04:01.730205Z",
+      "current_data": {
+        "total": "1150.00",
+        "currency": "USD",
+        "due_date": "2026-11-30",
+        "evidence": {
+          "total": "USD 1150.00",
+          "invoice_number": "INV-A-005"
+        },
+        "subtotal": "1000.00",
+        "tax_rate": "0.15",
+        "line_items": [
+          {
+            "quantity": "10",
+            "line_total": "1000.00",
+            "unit_price": "100.00",
+            "description": "Office paper"
+          }
+        ],
+        "tax_amount": "150.00",
+        "vendor_name": "Alpha Office Supplies",
+        "invoice_date": "2026-11-13",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-A-005",
+        "uncertain_fields": []
+      },
+      "issue_codes": [],
+      "extracted_data": {
+        "total": "1150.00",
+        "currency": "USD",
+        "due_date": "2026-11-30",
+        "evidence": {
+          "total": "USD 1150.00",
+          "invoice_number": "INV-A-005"
+        },
+        "subtotal": "1000.00",
+        "tax_rate": "0.15",
+        "line_items": [
+          {
+            "quantity": "10",
+            "line_total": "1000.00",
+            "unit_price": "100.00",
+            "description": "Office paper"
+          }
+        ],
+        "tax_amount": "150.00",
+        "vendor_name": "Alpha Office Supplies",
+        "invoice_date": "2026-11-13",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-A-005",
+        "uncertain_fields": []
+      },
+      "validations": [
+        {
+          "rule_code": "MISSING_REQUIRED_FIELD",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Required invoice fields",
+          "expected": {
+            "fields": [
+              "vendor_name",
+              "invoice_number",
+              "invoice_date",
+              "currency",
+              "total"
+            ]
+          },
+          "observed": {
+            "missing": []
+          }
+        },
+        {
+          "rule_code": "DUPLICATE_INVOICE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Supplier and invoice number must be unique",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "INVALID_DATE_RANGE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Due date must not precede invoice date",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "LINE_TOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Quantity times unit price must match line total",
+          "expected": null,
+          "observed": {
+            "mismatches": []
+          }
+        },
+        {
+          "rule_code": "UNAPPROVED_VENDOR",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Supplier must be approved",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "NEGATIVE_AMOUNT",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Negative invoices and credit notes are outside the MVP",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "AMOUNT_OUTLIER",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Total must not exceed the supplier's configured threshold",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "CURRENCY_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Currency must match supplier policy",
+          "expected": {
+            "currency": "USD"
+          },
+          "observed": {
+            "currency": "USD"
+          }
+        },
+        {
+          "rule_code": "SUBTOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Line totals must sum to subtotal",
+          "expected": {
+            "amount": "1000.00"
+          },
+          "observed": {
+            "amount": "1000.00"
+          }
+        },
+        {
+          "rule_code": "UNCERTAIN_EXTRACTION",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Uncertain fields or missing source evidence need correction",
+          "expected": null,
+          "observed": {
+            "fields": []
+          }
+        },
+        {
+          "rule_code": "AMOUNT_RANGE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Amounts must fit the ledger's numeric(18,2) range",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "UNSUPPORTED_CURRENCY",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Currency must be supported by the demo ledger",
+          "expected": {
+            "currencies": [
+              "USD",
+              "EUR",
+              "GBP",
+              "JPY"
+            ]
+          },
+          "observed": {
+            "currency": "USD"
+          }
+        },
+        {
+          "rule_code": "ARITHMETIC_INCOMPLETE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Line items, subtotal, tax amount, and total must be available for arithmetic checks",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "MONEY_PRECISION",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Amounts must use the currency's minor-unit precision",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "TOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Subtotal plus tax must equal total",
+          "expected": {
+            "amount": "1150.00"
+          },
+          "observed": {
+            "amount": "1150.00"
+          }
+        },
+        {
+          "rule_code": "TAX_RATE_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Explicit tax rate times subtotal must equal tax amount",
+          "expected": {
+            "amount": "150.00"
+          },
+          "observed": {
+            "amount": "150.00"
+          }
+        },
+        {
+          "rule_code": "INVALID_DATE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Dates must be valid ISO calendar dates",
+          "expected": null,
+          "observed": {
+            "invalid_fields": []
+          }
+        },
+        {
+          "rule_code": "INVALID_TAX_RATE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Explicit tax rate must be a fraction between zero and one",
+          "expected": null,
+          "observed": null
+        }
+      ],
+      "processing_attempts": [
+        {
+          "id": "2c424dc9-0223-43a4-9bc4-662bf2153711",
+          "ordinal": 1,
+          "status": "SUCCEEDED",
+          "created_at": "2026-11-14T07:04:01.716964Z",
+          "finished_at": "2026-11-14T07:04:01.738291Z",
+          "error_code": null
+        }
+      ],
+      "reviews": [],
+      "ledger_entry_id": null
+    },
+    {
+      "id": "be15b4b1-5e2f-4f38-99c7-de37aa9fcdc3",
+      "source": "api",
+      "filename": "wrong-total.pdf",
+      "mime_type": "application/pdf",
+      "sha256": "caaf5d9708f285123840ad93cd5a6a7769da148982e3bf95edd554dd3d401f58",
+      "byte_size": 1010,
+      "status": "NEEDS_REVIEW",
+      "revision": 1,
+      "review_required": true,
+      "validation_run_id": "de3b7b5e-2bbf-4aac-b504-310e837f0236",
+      "validated_revision": 1,
+      "vendor_id": "8928a7d9-c157-49de-bc58-a4e9aaa849c9",
+      "created_at": "2026-11-14T07:04:01.759666Z",
+      "updated_at": "2026-11-14T07:04:01.787808Z",
+      "current_data": {
+        "total": "2500.00",
+        "currency": "USD",
+        "due_date": "2026-11-30",
+        "evidence": {
+          "total": "USD 2500.00",
+          "invoice_number": "INV-B-002"
+        },
+        "subtotal": "2000.00",
+        "tax_rate": "0.15",
+        "line_items": [
+          {
+            "quantity": "10",
+            "line_total": "2000.00",
+            "unit_price": "200.00",
+            "description": "Software licenses"
+          }
+        ],
+        "tax_amount": "300.00",
+        "vendor_name": "Beta Tech",
+        "invoice_date": "2026-11-13",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-B-002",
+        "uncertain_fields": []
+      },
+      "issue_codes": [
+        "TOTAL_MISMATCH"
+      ],
+      "extracted_data": {
+        "total": "2500.00",
+        "currency": "USD",
+        "due_date": "2026-11-30",
+        "evidence": {
+          "total": "USD 2500.00",
+          "invoice_number": "INV-B-002"
+        },
+        "subtotal": "2000.00",
+        "tax_rate": "0.15",
+        "line_items": [
+          {
+            "quantity": "10",
+            "line_total": "2000.00",
+            "unit_price": "200.00",
+            "description": "Software licenses"
+          }
+        ],
+        "tax_amount": "300.00",
+        "vendor_name": "Beta Tech",
+        "invoice_date": "2026-11-13",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-B-002",
+        "uncertain_fields": []
+      },
+      "validations": [
+        {
+          "rule_code": "INVALID_DATE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Dates must be valid ISO calendar dates",
+          "expected": null,
+          "observed": {
+            "invalid_fields": []
+          }
+        },
+        {
+          "rule_code": "AMOUNT_RANGE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Amounts must fit the ledger's numeric(18,2) range",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "MISSING_REQUIRED_FIELD",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Required invoice fields",
+          "expected": {
+            "fields": [
+              "vendor_name",
+              "invoice_number",
+              "invoice_date",
+              "currency",
+              "total"
+            ]
+          },
+          "observed": {
+            "missing": []
+          }
+        },
+        {
+          "rule_code": "TAX_RATE_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Explicit tax rate times subtotal must equal tax amount",
+          "expected": {
+            "amount": "300.00"
+          },
+          "observed": {
+            "amount": "300.00"
+          }
+        },
+        {
+          "rule_code": "UNSUPPORTED_CURRENCY",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Currency must be supported by the demo ledger",
+          "expected": {
+            "currencies": [
+              "USD",
+              "EUR",
+              "GBP",
+              "JPY"
+            ]
+          },
+          "observed": {
+            "currency": "USD"
+          }
+        },
+        {
+          "rule_code": "LINE_TOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Quantity times unit price must match line total",
+          "expected": null,
+          "observed": {
+            "mismatches": []
+          }
+        },
+        {
+          "rule_code": "UNAPPROVED_VENDOR",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Supplier must be approved",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "NEGATIVE_AMOUNT",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Negative invoices and credit notes are outside the MVP",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "MONEY_PRECISION",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Amounts must use the currency's minor-unit precision",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "UNCERTAIN_EXTRACTION",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Uncertain fields or missing source evidence need correction",
+          "expected": null,
+          "observed": {
+            "fields": []
+          }
+        },
+        {
+          "rule_code": "INVALID_DATE_RANGE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Due date must not precede invoice date",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "ARITHMETIC_INCOMPLETE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Line items, subtotal, tax amount, and total must be available for arithmetic checks",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "SUBTOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Line totals must sum to subtotal",
+          "expected": {
+            "amount": "2000.00"
+          },
+          "observed": {
+            "amount": "2000.00"
+          }
+        },
+        {
+          "rule_code": "CURRENCY_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Currency must match supplier policy",
+          "expected": {
+            "currency": "USD"
+          },
+          "observed": {
+            "currency": "USD"
+          }
+        },
+        {
+          "rule_code": "DUPLICATE_INVOICE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Supplier and invoice number must be unique",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "TOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": false,
+          "message": "Subtotal plus tax must equal total",
+          "expected": {
+            "amount": "2300.00"
+          },
+          "observed": {
+            "amount": "2500.00"
+          }
+        },
+        {
+          "rule_code": "INVALID_TAX_RATE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Explicit tax rate must be a fraction between zero and one",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "AMOUNT_OUTLIER",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Total must not exceed the supplier's configured threshold",
+          "expected": null,
+          "observed": null
+        }
+      ],
+      "processing_attempts": [
+        {
+          "id": "e7ea4ecf-6f66-4565-80d4-41055b74e9f3",
+          "ordinal": 1,
+          "status": "SUCCEEDED",
+          "created_at": "2026-11-14T07:04:01.776915Z",
+          "finished_at": "2026-11-14T07:04:01.798660Z",
+          "error_code": null
+        }
+      ],
+      "reviews": [],
+      "ledger_entry_id": null
+    },
+    {
+      "id": "4e1658ba-c415-4d61-9971-a69adcd51ff4",
+      "source": "api",
+      "filename": "wrong-line.pdf",
+      "mime_type": "application/pdf",
+      "sha256": "403ef7c8327a604bd4edc7bc004e082697e2983ecf810eff0359d9201bb45899",
+      "byte_size": 1018,
+      "status": "NEEDS_REVIEW",
+      "revision": 1,
+      "review_required": true,
+      "validation_run_id": "46a81a64-f19e-47f0-bfca-8501792ea98f",
+      "validated_revision": 1,
+      "vendor_id": "4a6de922-f923-473b-9f30-2c446ba2f79d",
+      "created_at": "2026-11-14T07:04:01.822593Z",
+      "updated_at": "2026-11-14T07:04:01.851201Z",
+      "current_data": {
+        "total": "1150.00",
+        "currency": "USD",
+        "due_date": "2026-11-30",
+        "evidence": {
+          "total": "USD 1150.00",
+          "invoice_number": "INV-LINE-001"
+        },
+        "subtotal": "1000.00",
+        "tax_rate": "0.15",
+        "line_items": [
+          {
+            "quantity": "9",
+            "line_total": "1000.00",
+            "unit_price": "100.00",
+            "description": "Office paper"
+          }
+        ],
+        "tax_amount": "150.00",
+        "vendor_name": "Alpha Office Supplies",
+        "invoice_date": "2026-11-13",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-LINE-001",
+        "uncertain_fields": []
+      },
+      "issue_codes": [
+        "LINE_TOTAL_MISMATCH"
+      ],
+      "extracted_data": {
+        "total": "1150.00",
+        "currency": "USD",
+        "due_date": "2026-11-30",
+        "evidence": {
+          "total": "USD 1150.00",
+          "invoice_number": "INV-LINE-001"
+        },
+        "subtotal": "1000.00",
+        "tax_rate": "0.15",
+        "line_items": [
+          {
+            "quantity": "9",
+            "line_total": "1000.00",
+            "unit_price": "100.00",
+            "description": "Office paper"
+          }
+        ],
+        "tax_amount": "150.00",
+        "vendor_name": "Alpha Office Supplies",
+        "invoice_date": "2026-11-13",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-LINE-001",
+        "uncertain_fields": []
+      },
+      "validations": [
+        {
+          "rule_code": "LINE_TOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": false,
+          "message": "Quantity times unit price must match line total",
+          "expected": null,
+          "observed": {
+            "mismatches": [
+              {
+                "line": 1,
+                "expected": "900.00",
+                "observed": "1000.00"
+              }
+            ]
+          }
+        },
+        {
+          "rule_code": "INVALID_DATE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Dates must be valid ISO calendar dates",
+          "expected": null,
+          "observed": {
+            "invalid_fields": []
+          }
+        },
+        {
+          "rule_code": "AMOUNT_RANGE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Amounts must fit the ledger's numeric(18,2) range",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "MISSING_REQUIRED_FIELD",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Required invoice fields",
+          "expected": {
+            "fields": [
+              "vendor_name",
+              "invoice_number",
+              "invoice_date",
+              "currency",
+              "total"
+            ]
+          },
+          "observed": {
+            "missing": []
+          }
+        },
+        {
+          "rule_code": "UNCERTAIN_EXTRACTION",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Uncertain fields or missing source evidence need correction",
+          "expected": null,
+          "observed": {
+            "fields": []
+          }
+        },
+        {
+          "rule_code": "UNSUPPORTED_CURRENCY",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Currency must be supported by the demo ledger",
+          "expected": {
+            "currencies": [
+              "USD",
+              "EUR",
+              "GBP",
+              "JPY"
+            ]
+          },
+          "observed": {
+            "currency": "USD"
+          }
+        },
+        {
+          "rule_code": "TOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Subtotal plus tax must equal total",
+          "expected": {
+            "amount": "1150.00"
+          },
+          "observed": {
+            "amount": "1150.00"
+          }
+        },
+        {
+          "rule_code": "CURRENCY_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Currency must match supplier policy",
+          "expected": {
+            "currency": "USD"
+          },
+          "observed": {
+            "currency": "USD"
+          }
+        },
+        {
+          "rule_code": "MONEY_PRECISION",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Amounts must use the currency's minor-unit precision",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "INVALID_TAX_RATE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Explicit tax rate must be a fraction between zero and one",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "AMOUNT_OUTLIER",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Total must not exceed the supplier's configured threshold",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "UNAPPROVED_VENDOR",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Supplier must be approved",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "NEGATIVE_AMOUNT",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Negative invoices and credit notes are outside the MVP",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "TAX_RATE_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Explicit tax rate times subtotal must equal tax amount",
+          "expected": {
+            "amount": "150.00"
+          },
+          "observed": {
+            "amount": "150.00"
+          }
+        },
+        {
+          "rule_code": "SUBTOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Line totals must sum to subtotal",
+          "expected": {
+            "amount": "1000.00"
+          },
+          "observed": {
+            "amount": "1000.00"
+          }
+        },
+        {
+          "rule_code": "ARITHMETIC_INCOMPLETE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Line items, subtotal, tax amount, and total must be available for arithmetic checks",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "INVALID_DATE_RANGE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Due date must not precede invoice date",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "DUPLICATE_INVOICE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Supplier and invoice number must be unique",
+          "expected": null,
+          "observed": null
+        }
+      ],
+      "processing_attempts": [
+        {
+          "id": "bad4bd85-00eb-49ca-b07a-3e806683540c",
+          "ordinal": 1,
+          "status": "SUCCEEDED",
+          "created_at": "2026-11-14T07:04:01.840297Z",
+          "finished_at": "2026-11-14T07:04:01.863046Z",
+          "error_code": null
+        }
+      ],
+      "reviews": [],
+      "ledger_entry_id": null
+    },
+    {
+      "id": "6e373e8c-ea69-49dd-a23a-a38f6021e2ca",
+      "source": "api",
+      "filename": "wrong-tax.pdf",
+      "mime_type": "application/pdf",
+      "sha256": "409aebe27e3ee5f37af2e72827cac95ce783da77f3c6a6fb04e1057657408d1d",
+      "byte_size": 1017,
+      "status": "NEEDS_REVIEW",
+      "revision": 1,
+      "review_required": true,
+      "validation_run_id": "124858b5-097b-42d9-a301-ffb8810339c8",
+      "validated_revision": 1,
+      "vendor_id": "4a6de922-f923-473b-9f30-2c446ba2f79d",
+      "created_at": "2026-11-14T07:04:01.887129Z",
+      "updated_at": "2026-11-14T07:04:01.914716Z",
+      "current_data": {
+        "total": "1150.00",
+        "currency": "USD",
+        "due_date": "2026-11-30",
+        "evidence": {
+          "total": "USD 1150.00",
+          "invoice_number": "INV-TAX-001"
+        },
+        "subtotal": "1000.00",
+        "tax_rate": "0.10",
+        "line_items": [
+          {
+            "quantity": "10",
+            "line_total": "1000.00",
+            "unit_price": "100.00",
+            "description": "Office paper"
+          }
+        ],
+        "tax_amount": "150.00",
+        "vendor_name": "Alpha Office Supplies",
+        "invoice_date": "2026-11-13",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-TAX-001",
+        "uncertain_fields": []
+      },
+      "issue_codes": [
+        "TAX_RATE_MISMATCH"
+      ],
+      "extracted_data": {
+        "total": "1150.00",
+        "currency": "USD",
+        "due_date": "2026-11-30",
+        "evidence": {
+          "total": "USD 1150.00",
+          "invoice_number": "INV-TAX-001"
+        },
+        "subtotal": "1000.00",
+        "tax_rate": "0.10",
+        "line_items": [
+          {
+            "quantity": "10",
+            "line_total": "1000.00",
+            "unit_price": "100.00",
+            "description": "Office paper"
+          }
+        ],
+        "tax_amount": "150.00",
+        "vendor_name": "Alpha Office Supplies",
+        "invoice_date": "2026-11-13",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-TAX-001",
+        "uncertain_fields": []
+      },
+      "validations": [
+        {
+          "rule_code": "TAX_RATE_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": false,
+          "message": "Explicit tax rate times subtotal must equal tax amount",
+          "expected": {
+            "amount": "100.00"
+          },
+          "observed": {
+            "amount": "150.00"
+          }
+        },
+        {
+          "rule_code": "AMOUNT_OUTLIER",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Total must not exceed the supplier's configured threshold",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "MONEY_PRECISION",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Amounts must use the currency's minor-unit precision",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "AMOUNT_RANGE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Amounts must fit the ledger's numeric(18,2) range",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "ARITHMETIC_INCOMPLETE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Line items, subtotal, tax amount, and total must be available for arithmetic checks",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "SUBTOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Line totals must sum to subtotal",
+          "expected": {
+            "amount": "1000.00"
+          },
+          "observed": {
+            "amount": "1000.00"
+          }
+        },
+        {
+          "rule_code": "UNAPPROVED_VENDOR",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Supplier must be approved",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "CURRENCY_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Currency must match supplier policy",
+          "expected": {
+            "currency": "USD"
+          },
+          "observed": {
+            "currency": "USD"
+          }
+        },
+        {
+          "rule_code": "TOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Subtotal plus tax must equal total",
+          "expected": {
+            "amount": "1150.00"
+          },
+          "observed": {
+            "amount": "1150.00"
+          }
+        },
+        {
+          "rule_code": "INVALID_TAX_RATE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Explicit tax rate must be a fraction between zero and one",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "LINE_TOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Quantity times unit price must match line total",
+          "expected": null,
+          "observed": {
+            "mismatches": []
+          }
+        },
+        {
+          "rule_code": "NEGATIVE_AMOUNT",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Negative invoices and credit notes are outside the MVP",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "UNSUPPORTED_CURRENCY",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Currency must be supported by the demo ledger",
+          "expected": {
+            "currencies": [
+              "USD",
+              "EUR",
+              "GBP",
+              "JPY"
+            ]
+          },
+          "observed": {
+            "currency": "USD"
+          }
+        },
+        {
+          "rule_code": "MISSING_REQUIRED_FIELD",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Required invoice fields",
+          "expected": {
+            "fields": [
+              "vendor_name",
+              "invoice_number",
+              "invoice_date",
+              "currency",
+              "total"
+            ]
+          },
+          "observed": {
+            "missing": []
+          }
+        },
+        {
+          "rule_code": "INVALID_DATE_RANGE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Due date must not precede invoice date",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "UNCERTAIN_EXTRACTION",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Uncertain fields or missing source evidence need correction",
+          "expected": null,
+          "observed": {
+            "fields": []
+          }
+        },
+        {
+          "rule_code": "DUPLICATE_INVOICE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Supplier and invoice number must be unique",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "INVALID_DATE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Dates must be valid ISO calendar dates",
+          "expected": null,
+          "observed": {
+            "invalid_fields": []
+          }
+        }
+      ],
+      "processing_attempts": [
+        {
+          "id": "18f26550-8f48-491b-ae5a-7d4a3e91b323",
+          "ordinal": 1,
+          "status": "SUCCEEDED",
+          "created_at": "2026-11-14T07:04:01.904798Z",
+          "finished_at": "2026-11-14T07:04:01.923335Z",
+          "error_code": null
+        }
+      ],
+      "reviews": [],
+      "ledger_entry_id": null
+    },
+    {
+      "id": "09162006-8b5b-48de-ac15-fb64e2994394",
+      "source": "api",
+      "filename": "duplicate-resend.pdf",
+      "mime_type": "application/pdf",
+      "sha256": "39fa344a0c380f711ccc16e533f760734b0f0698a34ed205102c0775e3dfc7e0",
+      "byte_size": 1022,
+      "status": "NEEDS_REVIEW",
+      "revision": 1,
+      "review_required": true,
+      "validation_run_id": "2e5b2196-4337-4bee-a914-ef6d5fcb2cfb",
+      "validated_revision": 1,
+      "vendor_id": "4a6de922-f923-473b-9f30-2c446ba2f79d",
+      "created_at": "2026-11-14T07:04:01.962610Z",
+      "updated_at": "2026-11-14T07:04:01.987395Z",
+      "current_data": {
+        "total": "1150.00",
+        "currency": "USD",
+        "due_date": "2026-11-30",
+        "evidence": {
+          "total": "USD 1150.00",
+          "invoice_number": "INV-A-001"
+        },
+        "subtotal": "1000.00",
+        "tax_rate": "0.15",
+        "line_items": [
+          {
+            "quantity": "10",
+            "line_total": "1000.00",
+            "unit_price": "100.00",
+            "description": "Office paper"
+          }
+        ],
+        "tax_amount": "150.00",
+        "vendor_name": "Alpha Office Supplies",
+        "invoice_date": "2026-11-13",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-A-001",
+        "uncertain_fields": []
+      },
+      "issue_codes": [
+        "DUPLICATE_INVOICE"
+      ],
+      "extracted_data": {
+        "total": "1150.00",
+        "currency": "USD",
+        "due_date": "2026-11-30",
+        "evidence": {
+          "total": "USD 1150.00",
+          "invoice_number": "INV-A-001"
+        },
+        "subtotal": "1000.00",
+        "tax_rate": "0.15",
+        "line_items": [
+          {
+            "quantity": "10",
+            "line_total": "1000.00",
+            "unit_price": "100.00",
+            "description": "Office paper"
+          }
+        ],
+        "tax_amount": "150.00",
+        "vendor_name": "Alpha Office Supplies",
+        "invoice_date": "2026-11-13",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-A-001",
+        "uncertain_fields": []
+      },
+      "validations": [
+        {
+          "rule_code": "MONEY_PRECISION",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Amounts must use the currency's minor-unit precision",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "TAX_RATE_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Explicit tax rate times subtotal must equal tax amount",
+          "expected": {
+            "amount": "150.00"
+          },
+          "observed": {
+            "amount": "150.00"
+          }
+        },
+        {
+          "rule_code": "CURRENCY_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Currency must match supplier policy",
+          "expected": {
+            "currency": "USD"
+          },
+          "observed": {
+            "currency": "USD"
+          }
+        },
+        {
+          "rule_code": "LINE_TOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Quantity times unit price must match line total",
+          "expected": null,
+          "observed": {
+            "mismatches": []
+          }
+        },
+        {
+          "rule_code": "AMOUNT_RANGE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Amounts must fit the ledger's numeric(18,2) range",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "INVALID_DATE_RANGE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Due date must not precede invoice date",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "UNAPPROVED_VENDOR",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Supplier must be approved",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "SUBTOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Line totals must sum to subtotal",
+          "expected": {
+            "amount": "1000.00"
+          },
+          "observed": {
+            "amount": "1000.00"
+          }
+        },
+        {
+          "rule_code": "INVALID_DATE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Dates must be valid ISO calendar dates",
+          "expected": null,
+          "observed": {
+            "invalid_fields": []
+          }
+        },
+        {
+          "rule_code": "MISSING_REQUIRED_FIELD",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Required invoice fields",
+          "expected": {
+            "fields": [
+              "vendor_name",
+              "invoice_number",
+              "invoice_date",
+              "currency",
+              "total"
+            ]
+          },
+          "observed": {
+            "missing": []
+          }
+        },
+        {
+          "rule_code": "UNSUPPORTED_CURRENCY",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Currency must be supported by the demo ledger",
+          "expected": {
+            "currencies": [
+              "USD",
+              "EUR",
+              "GBP",
+              "JPY"
+            ]
+          },
+          "observed": {
+            "currency": "USD"
+          }
+        },
+        {
+          "rule_code": "DUPLICATE_INVOICE",
+          "severity": "BLOCKER",
+          "passed": false,
+          "message": "Supplier and invoice number must be unique",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "INVALID_TAX_RATE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Explicit tax rate must be a fraction between zero and one",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "TOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Subtotal plus tax must equal total",
+          "expected": {
+            "amount": "1150.00"
+          },
+          "observed": {
+            "amount": "1150.00"
+          }
+        },
+        {
+          "rule_code": "ARITHMETIC_INCOMPLETE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Line items, subtotal, tax amount, and total must be available for arithmetic checks",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "NEGATIVE_AMOUNT",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Negative invoices and credit notes are outside the MVP",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "AMOUNT_OUTLIER",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Total must not exceed the supplier's configured threshold",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "UNCERTAIN_EXTRACTION",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Uncertain fields or missing source evidence need correction",
+          "expected": null,
+          "observed": {
+            "fields": []
+          }
+        }
+      ],
+      "processing_attempts": [
+        {
+          "id": "a69f3883-b2dd-4887-a1f5-9ab8c23d574e",
+          "ordinal": 1,
+          "status": "SUCCEEDED",
+          "created_at": "2026-11-14T07:04:01.978529Z",
+          "finished_at": "2026-11-14T07:04:01.994234Z",
+          "error_code": null
+        }
+      ],
+      "reviews": [],
+      "ledger_entry_id": null
+    },
+    {
+      "id": "c4d27588-689c-43e9-8dd7-be809e3d851c",
+      "source": "api",
+      "filename": "duplicate-altered.pdf",
+      "mime_type": "application/pdf",
+      "sha256": "9687f513b5a4946b318618e3aece20885864d4fb8cc14123628b42879d87d994",
+      "byte_size": 1023,
+      "status": "NEEDS_REVIEW",
+      "revision": 1,
+      "review_required": true,
+      "validation_run_id": "1aa0d507-bdb6-42bc-bbff-e5d2f0d383c9",
+      "validated_revision": 1,
+      "vendor_id": "4a6de922-f923-473b-9f30-2c446ba2f79d",
+      "created_at": "2026-11-14T07:04:02.014155Z",
+      "updated_at": "2026-11-14T07:04:02.052776Z",
+      "current_data": {
+        "total": "2300.00",
+        "currency": "USD",
+        "due_date": "2026-11-30",
+        "evidence": {
+          "total": "USD 2300.00",
+          "invoice_number": "INV-A-001"
+        },
+        "subtotal": "2000.00",
+        "tax_rate": "0.15",
+        "line_items": [
+          {
+            "quantity": "10",
+            "line_total": "2000.00",
+            "unit_price": "200.00",
+            "description": "Office paper"
+          }
+        ],
+        "tax_amount": "300.00",
+        "vendor_name": "Alpha Office Supplies",
+        "invoice_date": "2026-11-13",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-A-001",
+        "uncertain_fields": []
+      },
+      "issue_codes": [
+        "DUPLICATE_INVOICE"
+      ],
+      "extracted_data": {
+        "total": "2300.00",
+        "currency": "USD",
+        "due_date": "2026-11-30",
+        "evidence": {
+          "total": "USD 2300.00",
+          "invoice_number": "INV-A-001"
+        },
+        "subtotal": "2000.00",
+        "tax_rate": "0.15",
+        "line_items": [
+          {
+            "quantity": "10",
+            "line_total": "2000.00",
+            "unit_price": "200.00",
+            "description": "Office paper"
+          }
+        ],
+        "tax_amount": "300.00",
+        "vendor_name": "Alpha Office Supplies",
+        "invoice_date": "2026-11-13",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-A-001",
+        "uncertain_fields": []
+      },
+      "validations": [
+        {
+          "rule_code": "SUBTOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Line totals must sum to subtotal",
+          "expected": {
+            "amount": "2000.00"
+          },
+          "observed": {
+            "amount": "2000.00"
+          }
+        },
+        {
+          "rule_code": "INVALID_DATE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Dates must be valid ISO calendar dates",
+          "expected": null,
+          "observed": {
+            "invalid_fields": []
+          }
+        },
+        {
+          "rule_code": "INVALID_DATE_RANGE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Due date must not precede invoice date",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "INVALID_TAX_RATE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Explicit tax rate must be a fraction between zero and one",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "TAX_RATE_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Explicit tax rate times subtotal must equal tax amount",
+          "expected": {
+            "amount": "300.00"
+          },
+          "observed": {
+            "amount": "300.00"
+          }
+        },
+        {
+          "rule_code": "DUPLICATE_INVOICE",
+          "severity": "BLOCKER",
+          "passed": false,
+          "message": "Supplier and invoice number must be unique",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "UNSUPPORTED_CURRENCY",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Currency must be supported by the demo ledger",
+          "expected": {
+            "currencies": [
+              "USD",
+              "EUR",
+              "GBP",
+              "JPY"
+            ]
+          },
+          "observed": {
+            "currency": "USD"
+          }
+        },
+        {
+          "rule_code": "UNAPPROVED_VENDOR",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Supplier must be approved",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "MONEY_PRECISION",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Amounts must use the currency's minor-unit precision",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "MISSING_REQUIRED_FIELD",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Required invoice fields",
+          "expected": {
+            "fields": [
+              "vendor_name",
+              "invoice_number",
+              "invoice_date",
+              "currency",
+              "total"
+            ]
+          },
+          "observed": {
+            "missing": []
+          }
+        },
+        {
+          "rule_code": "LINE_TOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Quantity times unit price must match line total",
+          "expected": null,
+          "observed": {
+            "mismatches": []
+          }
+        },
+        {
+          "rule_code": "TOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Subtotal plus tax must equal total",
+          "expected": {
+            "amount": "2300.00"
+          },
+          "observed": {
+            "amount": "2300.00"
+          }
+        },
+        {
+          "rule_code": "AMOUNT_RANGE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Amounts must fit the ledger's numeric(18,2) range",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "CURRENCY_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Currency must match supplier policy",
+          "expected": {
+            "currency": "USD"
+          },
+          "observed": {
+            "currency": "USD"
+          }
+        },
+        {
+          "rule_code": "ARITHMETIC_INCOMPLETE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Line items, subtotal, tax amount, and total must be available for arithmetic checks",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "AMOUNT_OUTLIER",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Total must not exceed the supplier's configured threshold",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "UNCERTAIN_EXTRACTION",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Uncertain fields or missing source evidence need correction",
+          "expected": null,
+          "observed": {
+            "fields": []
+          }
+        },
+        {
+          "rule_code": "NEGATIVE_AMOUNT",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Negative invoices and credit notes are outside the MVP",
+          "expected": null,
+          "observed": null
+        }
+      ],
+      "processing_attempts": [
+        {
+          "id": "0a16eac2-fd01-495f-a8e4-fb4d6f886beb",
+          "ordinal": 1,
+          "status": "SUCCEEDED",
+          "created_at": "2026-11-14T07:04:02.032001Z",
+          "finished_at": "2026-11-14T07:04:02.064908Z",
+          "error_code": null
+        }
+      ],
+      "reviews": [],
+      "ledger_entry_id": null
+    },
+    {
+      "id": "ec554b90-3986-4ae7-bd89-b38839302f75",
+      "source": "api",
+      "filename": "unknown-vendor-1.pdf",
+      "mime_type": "application/pdf",
+      "sha256": "73de8dc6f54687bf8e335d8f84e7f94dcf9f9ba1482458458845a535ed0a1a40",
+      "byte_size": 1022,
+      "status": "NEEDS_REVIEW",
+      "revision": 1,
+      "review_required": true,
+      "validation_run_id": "38943744-0e72-4325-ad67-5030c23c7660",
+      "validated_revision": 1,
+      "vendor_id": null,
+      "created_at": "2026-11-14T07:04:02.094229Z",
+      "updated_at": "2026-11-14T07:04:02.127483Z",
+      "current_data": {
+        "total": "1150.00",
+        "currency": "USD",
+        "due_date": "2026-11-30",
+        "evidence": {
+          "total": "USD 1150.00",
+          "invoice_number": "INV-U-1"
+        },
+        "subtotal": "1000.00",
+        "tax_rate": "0.15",
+        "line_items": [
+          {
+            "quantity": "10",
+            "line_total": "1000.00",
+            "unit_price": "100.00",
+            "description": "Office paper"
+          }
+        ],
+        "tax_amount": "150.00",
+        "vendor_name": "Unregistered Supplier 1",
+        "invoice_date": "2026-11-13",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-U-1",
+        "uncertain_fields": []
+      },
+      "issue_codes": [
+        "UNAPPROVED_VENDOR"
+      ],
+      "extracted_data": {
+        "total": "1150.00",
+        "currency": "USD",
+        "due_date": "2026-11-30",
+        "evidence": {
+          "total": "USD 1150.00",
+          "invoice_number": "INV-U-1"
+        },
+        "subtotal": "1000.00",
+        "tax_rate": "0.15",
+        "line_items": [
+          {
+            "quantity": "10",
+            "line_total": "1000.00",
+            "unit_price": "100.00",
+            "description": "Office paper"
+          }
+        ],
+        "tax_amount": "150.00",
+        "vendor_name": "Unregistered Supplier 1",
+        "invoice_date": "2026-11-13",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-U-1",
+        "uncertain_fields": []
+      },
+      "validations": [
+        {
+          "rule_code": "UNSUPPORTED_CURRENCY",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Currency must be supported by the demo ledger",
+          "expected": {
+            "currencies": [
+              "USD",
+              "EUR",
+              "GBP",
+              "JPY"
+            ]
+          },
+          "observed": {
+            "currency": "USD"
+          }
+        },
+        {
+          "rule_code": "AMOUNT_OUTLIER",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Total must not exceed the supplier's configured threshold",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "NEGATIVE_AMOUNT",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Negative invoices and credit notes are outside the MVP",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "INVALID_TAX_RATE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Explicit tax rate must be a fraction between zero and one",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "CURRENCY_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Currency must match supplier policy",
+          "expected": {
+            "currency": null
+          },
+          "observed": {
+            "currency": "USD"
+          }
+        },
+        {
+          "rule_code": "TAX_RATE_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Explicit tax rate times subtotal must equal tax amount",
+          "expected": {
+            "amount": "150.00"
+          },
+          "observed": {
+            "amount": "150.00"
+          }
+        },
+        {
+          "rule_code": "ARITHMETIC_INCOMPLETE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Line items, subtotal, tax amount, and total must be available for arithmetic checks",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "UNCERTAIN_EXTRACTION",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Uncertain fields or missing source evidence need correction",
+          "expected": null,
+          "observed": {
+            "fields": []
+          }
+        },
+        {
+          "rule_code": "MISSING_REQUIRED_FIELD",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Required invoice fields",
+          "expected": {
+            "fields": [
+              "vendor_name",
+              "invoice_number",
+              "invoice_date",
+              "currency",
+              "total"
+            ]
+          },
+          "observed": {
+            "missing": []
+          }
+        },
+        {
+          "rule_code": "UNAPPROVED_VENDOR",
+          "severity": "BLOCKER",
+          "passed": false,
+          "message": "Supplier must be approved",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "MONEY_PRECISION",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Amounts must use the currency's minor-unit precision",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "INVALID_DATE_RANGE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Due date must not precede invoice date",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "TOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Subtotal plus tax must equal total",
+          "expected": {
+            "amount": "1150.00"
+          },
+          "observed": {
+            "amount": "1150.00"
+          }
+        },
+        {
+          "rule_code": "DUPLICATE_INVOICE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Supplier and invoice number must be unique",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "AMOUNT_RANGE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Amounts must fit the ledger's numeric(18,2) range",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "LINE_TOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Quantity times unit price must match line total",
+          "expected": null,
+          "observed": {
+            "mismatches": []
+          }
+        },
+        {
+          "rule_code": "SUBTOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Line totals must sum to subtotal",
+          "expected": {
+            "amount": "1000.00"
+          },
+          "observed": {
+            "amount": "1000.00"
+          }
+        },
+        {
+          "rule_code": "INVALID_DATE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Dates must be valid ISO calendar dates",
+          "expected": null,
+          "observed": {
+            "invalid_fields": []
+          }
+        }
+      ],
+      "processing_attempts": [
+        {
+          "id": "d787cc63-9ef1-487f-a333-513fd93d73cc",
+          "ordinal": 1,
+          "status": "SUCCEEDED",
+          "created_at": "2026-11-14T07:04:02.114223Z",
+          "finished_at": "2026-11-14T07:04:02.148463Z",
+          "error_code": null
+        }
+      ],
+      "reviews": [],
+      "ledger_entry_id": null
+    },
+    {
+      "id": "28907598-c04b-4386-9a17-9cbe96c07dd0",
+      "source": "api",
+      "filename": "unknown-vendor-2.pdf",
+      "mime_type": "application/pdf",
+      "sha256": "958b97047c8063ca299c141b207cf2361bec5e63ff5721305e7282534b66f2ea",
+      "byte_size": 1022,
+      "status": "NEEDS_REVIEW",
+      "revision": 1,
+      "review_required": true,
+      "validation_run_id": "88f000f5-76b5-4720-b7cc-76018c58c4c6",
+      "validated_revision": 1,
+      "vendor_id": null,
+      "created_at": "2026-11-14T07:04:02.186364Z",
+      "updated_at": "2026-11-14T07:04:02.237631Z",
+      "current_data": {
+        "total": "1150.00",
+        "currency": "USD",
+        "due_date": "2026-11-30",
+        "evidence": {
+          "total": "USD 1150.00",
+          "invoice_number": "INV-U-2"
+        },
+        "subtotal": "1000.00",
+        "tax_rate": "0.15",
+        "line_items": [
+          {
+            "quantity": "10",
+            "line_total": "1000.00",
+            "unit_price": "100.00",
+            "description": "Office paper"
+          }
+        ],
+        "tax_amount": "150.00",
+        "vendor_name": "Unregistered Supplier 2",
+        "invoice_date": "2026-11-13",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-U-2",
+        "uncertain_fields": []
+      },
+      "issue_codes": [
+        "UNAPPROVED_VENDOR"
+      ],
+      "extracted_data": {
+        "total": "1150.00",
+        "currency": "USD",
+        "due_date": "2026-11-30",
+        "evidence": {
+          "total": "USD 1150.00",
+          "invoice_number": "INV-U-2"
+        },
+        "subtotal": "1000.00",
+        "tax_rate": "0.15",
+        "line_items": [
+          {
+            "quantity": "10",
+            "line_total": "1000.00",
+            "unit_price": "100.00",
+            "description": "Office paper"
+          }
+        ],
+        "tax_amount": "150.00",
+        "vendor_name": "Unregistered Supplier 2",
+        "invoice_date": "2026-11-13",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-U-2",
+        "uncertain_fields": []
+      },
+      "validations": [
+        {
+          "rule_code": "MISSING_REQUIRED_FIELD",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Required invoice fields",
+          "expected": {
+            "fields": [
+              "vendor_name",
+              "invoice_number",
+              "invoice_date",
+              "currency",
+              "total"
+            ]
+          },
+          "observed": {
+            "missing": []
+          }
+        },
+        {
+          "rule_code": "MONEY_PRECISION",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Amounts must use the currency's minor-unit precision",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "UNSUPPORTED_CURRENCY",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Currency must be supported by the demo ledger",
+          "expected": {
+            "currencies": [
+              "USD",
+              "EUR",
+              "GBP",
+              "JPY"
+            ]
+          },
+          "observed": {
+            "currency": "USD"
+          }
+        },
+        {
+          "rule_code": "ARITHMETIC_INCOMPLETE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Line items, subtotal, tax amount, and total must be available for arithmetic checks",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "NEGATIVE_AMOUNT",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Negative invoices and credit notes are outside the MVP",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "UNCERTAIN_EXTRACTION",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Uncertain fields or missing source evidence need correction",
+          "expected": null,
+          "observed": {
+            "fields": []
+          }
+        },
+        {
+          "rule_code": "AMOUNT_RANGE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Amounts must fit the ledger's numeric(18,2) range",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "AMOUNT_OUTLIER",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Total must not exceed the supplier's configured threshold",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "TAX_RATE_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Explicit tax rate times subtotal must equal tax amount",
+          "expected": {
+            "amount": "150.00"
+          },
+          "observed": {
+            "amount": "150.00"
+          }
+        },
+        {
+          "rule_code": "INVALID_DATE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Dates must be valid ISO calendar dates",
+          "expected": null,
+          "observed": {
+            "invalid_fields": []
+          }
+        },
+        {
+          "rule_code": "LINE_TOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Quantity times unit price must match line total",
+          "expected": null,
+          "observed": {
+            "mismatches": []
+          }
+        },
+        {
+          "rule_code": "SUBTOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Line totals must sum to subtotal",
+          "expected": {
+            "amount": "1000.00"
+          },
+          "observed": {
+            "amount": "1000.00"
+          }
+        },
+        {
+          "rule_code": "INVALID_TAX_RATE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Explicit tax rate must be a fraction between zero and one",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "TOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Subtotal plus tax must equal total",
+          "expected": {
+            "amount": "1150.00"
+          },
+          "observed": {
+            "amount": "1150.00"
+          }
+        },
+        {
+          "rule_code": "CURRENCY_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Currency must match supplier policy",
+          "expected": {
+            "currency": null
+          },
+          "observed": {
+            "currency": "USD"
+          }
+        },
+        {
+          "rule_code": "UNAPPROVED_VENDOR",
+          "severity": "BLOCKER",
+          "passed": false,
+          "message": "Supplier must be approved",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "DUPLICATE_INVOICE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Supplier and invoice number must be unique",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "INVALID_DATE_RANGE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Due date must not precede invoice date",
+          "expected": null,
+          "observed": null
+        }
+      ],
+      "processing_attempts": [
+        {
+          "id": "b4393f65-0598-4b5c-82c1-e136af781eca",
+          "ordinal": 1,
+          "status": "SUCCEEDED",
+          "created_at": "2026-11-14T07:04:02.218099Z",
+          "finished_at": "2026-11-14T07:04:02.250098Z",
+          "error_code": null
+        }
+      ],
+      "reviews": [],
+      "ledger_entry_id": null
+    },
+    {
+      "id": "6d60f791-f5c3-441d-aad1-445548d3a2b6",
+      "source": "api",
+      "filename": "missing-invoice_number.pdf",
+      "mime_type": "application/pdf",
+      "sha256": "5f62d57a95ac1093dab7f7c7a3e5f6413b380f609613dfc7a0270e29b19cfcb8",
+      "byte_size": 988,
+      "status": "NEEDS_REVIEW",
+      "revision": 1,
+      "review_required": true,
+      "validation_run_id": "9c1c38d6-7633-4d59-97f6-b8153974366b",
+      "validated_revision": 1,
+      "vendor_id": "4a6de922-f923-473b-9f30-2c446ba2f79d",
+      "created_at": "2026-11-14T07:04:02.283695Z",
+      "updated_at": "2026-11-14T07:04:02.342798Z",
+      "current_data": {
+        "total": "1150.00",
+        "currency": "USD",
+        "due_date": "2026-11-30",
+        "evidence": {
+          "total": "USD 1150.00",
+          "invoice_number": ""
+        },
+        "subtotal": "1000.00",
+        "tax_rate": "0.15",
+        "line_items": [
+          {
+            "quantity": "10",
+            "line_total": "1000.00",
+            "unit_price": "100.00",
+            "description": "Office paper"
+          }
+        ],
+        "tax_amount": "150.00",
+        "vendor_name": "Alpha Office Supplies",
+        "invoice_date": "2026-11-13",
+        "vendor_tax_id": null,
+        "invoice_number": null,
+        "uncertain_fields": []
+      },
+      "issue_codes": [
+        "MISSING_REQUIRED_FIELD"
+      ],
+      "extracted_data": {
+        "total": "1150.00",
+        "currency": "USD",
+        "due_date": "2026-11-30",
+        "evidence": {
+          "total": "USD 1150.00",
+          "invoice_number": ""
+        },
+        "subtotal": "1000.00",
+        "tax_rate": "0.15",
+        "line_items": [
+          {
+            "quantity": "10",
+            "line_total": "1000.00",
+            "unit_price": "100.00",
+            "description": "Office paper"
+          }
+        ],
+        "tax_amount": "150.00",
+        "vendor_name": "Alpha Office Supplies",
+        "invoice_date": "2026-11-13",
+        "vendor_tax_id": null,
+        "invoice_number": null,
+        "uncertain_fields": []
+      },
+      "validations": [
+        {
+          "rule_code": "INVALID_DATE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Dates must be valid ISO calendar dates",
+          "expected": null,
+          "observed": {
+            "invalid_fields": []
+          }
+        },
+        {
+          "rule_code": "TOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Subtotal plus tax must equal total",
+          "expected": {
+            "amount": "1150.00"
+          },
+          "observed": {
+            "amount": "1150.00"
+          }
+        },
+        {
+          "rule_code": "TAX_RATE_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Explicit tax rate times subtotal must equal tax amount",
+          "expected": {
+            "amount": "150.00"
+          },
+          "observed": {
+            "amount": "150.00"
+          }
+        },
+        {
+          "rule_code": "INVALID_TAX_RATE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Explicit tax rate must be a fraction between zero and one",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "UNAPPROVED_VENDOR",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Supplier must be approved",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "LINE_TOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Quantity times unit price must match line total",
+          "expected": null,
+          "observed": {
+            "mismatches": []
+          }
+        },
+        {
+          "rule_code": "UNCERTAIN_EXTRACTION",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Uncertain fields or missing source evidence need correction",
+          "expected": null,
+          "observed": {
+            "fields": []
+          }
+        },
+        {
+          "rule_code": "AMOUNT_OUTLIER",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Total must not exceed the supplier's configured threshold",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "SUBTOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Line totals must sum to subtotal",
+          "expected": {
+            "amount": "1000.00"
+          },
+          "observed": {
+            "amount": "1000.00"
+          }
+        },
+        {
+          "rule_code": "MISSING_REQUIRED_FIELD",
+          "severity": "BLOCKER",
+          "passed": false,
+          "message": "Required invoice fields",
+          "expected": {
+            "fields": [
+              "vendor_name",
+              "invoice_number",
+              "invoice_date",
+              "currency",
+              "total"
+            ]
+          },
+          "observed": {
+            "missing": [
+              "invoice_number"
+            ]
+          }
+        },
+        {
+          "rule_code": "NEGATIVE_AMOUNT",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Negative invoices and credit notes are outside the MVP",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "INVALID_DATE_RANGE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Due date must not precede invoice date",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "DUPLICATE_INVOICE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Supplier and invoice number must be unique",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "UNSUPPORTED_CURRENCY",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Currency must be supported by the demo ledger",
+          "expected": {
+            "currencies": [
+              "USD",
+              "EUR",
+              "GBP",
+              "JPY"
+            ]
+          },
+          "observed": {
+            "currency": "USD"
+          }
+        },
+        {
+          "rule_code": "MONEY_PRECISION",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Amounts must use the currency's minor-unit precision",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "AMOUNT_RANGE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Amounts must fit the ledger's numeric(18,2) range",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "CURRENCY_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Currency must match supplier policy",
+          "expected": {
+            "currency": "USD"
+          },
+          "observed": {
+            "currency": "USD"
+          }
+        },
+        {
+          "rule_code": "ARITHMETIC_INCOMPLETE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Line items, subtotal, tax amount, and total must be available for arithmetic checks",
+          "expected": null,
+          "observed": null
+        }
+      ],
+      "processing_attempts": [
+        {
+          "id": "5857ee9c-f0fc-4324-8cf5-d0b3cd7faddc",
+          "ordinal": 1,
+          "status": "SUCCEEDED",
+          "created_at": "2026-11-14T07:04:02.313793Z",
+          "finished_at": "2026-11-14T07:04:02.362947Z",
+          "error_code": null
+        }
+      ],
+      "reviews": [],
+      "ledger_entry_id": null
+    },
+    {
+      "id": "45d213d6-fad2-4f89-895c-af48b008cd18",
+      "source": "api",
+      "filename": "missing-invoice_date.pdf",
+      "mime_type": "application/pdf",
+      "sha256": "896e894876e520d48d22d1959e6d81f966745b6766cb4947270721dcb689cf4c",
+      "byte_size": 1002,
+      "status": "NEEDS_REVIEW",
+      "revision": 1,
+      "review_required": true,
+      "validation_run_id": "f8a80410-5da9-425c-bf6c-cdd688603423",
+      "validated_revision": 1,
+      "vendor_id": "4a6de922-f923-473b-9f30-2c446ba2f79d",
+      "created_at": "2026-11-14T07:04:02.401233Z",
+      "updated_at": "2026-11-14T07:04:02.431082Z",
+      "current_data": {
+        "total": "1150.00",
+        "currency": "USD",
+        "due_date": "2026-11-30",
+        "evidence": {
+          "total": "USD 1150.00",
+          "invoice_number": "INV-MISSING-invoice_date"
+        },
+        "subtotal": "1000.00",
+        "tax_rate": "0.15",
+        "line_items": [
+          {
+            "quantity": "10",
+            "line_total": "1000.00",
+            "unit_price": "100.00",
+            "description": "Office paper"
+          }
+        ],
+        "tax_amount": "150.00",
+        "vendor_name": "Alpha Office Supplies",
+        "invoice_date": null,
+        "vendor_tax_id": null,
+        "invoice_number": "INV-MISSING-invoice_date",
+        "uncertain_fields": []
+      },
+      "issue_codes": [
+        "MISSING_REQUIRED_FIELD"
+      ],
+      "extracted_data": {
+        "total": "1150.00",
+        "currency": "USD",
+        "due_date": "2026-11-30",
+        "evidence": {
+          "total": "USD 1150.00",
+          "invoice_number": "INV-MISSING-invoice_date"
+        },
+        "subtotal": "1000.00",
+        "tax_rate": "0.15",
+        "line_items": [
+          {
+            "quantity": "10",
+            "line_total": "1000.00",
+            "unit_price": "100.00",
+            "description": "Office paper"
+          }
+        ],
+        "tax_amount": "150.00",
+        "vendor_name": "Alpha Office Supplies",
+        "invoice_date": null,
+        "vendor_tax_id": null,
+        "invoice_number": "INV-MISSING-invoice_date",
+        "uncertain_fields": []
+      },
+      "validations": [
+        {
+          "rule_code": "UNSUPPORTED_CURRENCY",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Currency must be supported by the demo ledger",
+          "expected": {
+            "currencies": [
+              "USD",
+              "EUR",
+              "GBP",
+              "JPY"
+            ]
+          },
+          "observed": {
+            "currency": "USD"
+          }
+        },
+        {
+          "rule_code": "LINE_TOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Quantity times unit price must match line total",
+          "expected": null,
+          "observed": {
+            "mismatches": []
+          }
+        },
+        {
+          "rule_code": "INVALID_DATE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Dates must be valid ISO calendar dates",
+          "expected": null,
+          "observed": {
+            "invalid_fields": []
+          }
+        },
+        {
+          "rule_code": "AMOUNT_RANGE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Amounts must fit the ledger's numeric(18,2) range",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "SUBTOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Line totals must sum to subtotal",
+          "expected": {
+            "amount": "1000.00"
+          },
+          "observed": {
+            "amount": "1000.00"
+          }
+        },
+        {
+          "rule_code": "CURRENCY_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Currency must match supplier policy",
+          "expected": {
+            "currency": "USD"
+          },
+          "observed": {
+            "currency": "USD"
+          }
+        },
+        {
+          "rule_code": "ARITHMETIC_INCOMPLETE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Line items, subtotal, tax amount, and total must be available for arithmetic checks",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "UNCERTAIN_EXTRACTION",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Uncertain fields or missing source evidence need correction",
+          "expected": null,
+          "observed": {
+            "fields": []
+          }
+        },
+        {
+          "rule_code": "MISSING_REQUIRED_FIELD",
+          "severity": "BLOCKER",
+          "passed": false,
+          "message": "Required invoice fields",
+          "expected": {
+            "fields": [
+              "vendor_name",
+              "invoice_number",
+              "invoice_date",
+              "currency",
+              "total"
+            ]
+          },
+          "observed": {
+            "missing": [
+              "invoice_date"
+            ]
+          }
+        },
+        {
+          "rule_code": "INVALID_DATE_RANGE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Due date must not precede invoice date",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "NEGATIVE_AMOUNT",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Negative invoices and credit notes are outside the MVP",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "TAX_RATE_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Explicit tax rate times subtotal must equal tax amount",
+          "expected": {
+            "amount": "150.00"
+          },
+          "observed": {
+            "amount": "150.00"
+          }
+        },
+        {
+          "rule_code": "INVALID_TAX_RATE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Explicit tax rate must be a fraction between zero and one",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "DUPLICATE_INVOICE",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Supplier and invoice number must be unique",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "TOTAL_MISMATCH",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Subtotal plus tax must equal total",
+          "expected": {
+            "amount": "1150.00"
+          },
+          "observed": {
+            "amount": "1150.00"
+          }
+        },
+        {
+          "rule_code": "MONEY_PRECISION",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Amounts must use the currency's minor-unit precision",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "UNAPPROVED_VENDOR",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Supplier must be approved",
+          "expected": null,
+          "observed": null
+        },
+        {
+          "rule_code": "AMOUNT_OUTLIER",
+          "severity": "BLOCKER",
+          "passed": true,
+          "message": "Total must not exceed the supplier's configured threshold",
+          "expected": null,
+          "observed": null
+        }
+      ],
+      "processing_attempts": [
+        {
+          "id": "e5895e89-7b05-4dd7-bc9e-59b20c907108",
+          "ordinal": 1,
+          "status": "SUCCEEDED",
+          "created_at": "2026-11-14T07:04:02.421987Z",
+          "finished_at": "2026-11-14T07:04:02.437235Z",
+          "error_code": null
+        }
+      ],
+      "reviews": [],
+      "ledger_entry_id": null
+    },
+    {
+      "id": "b3c6ccae-aa73-44c8-9da0-db0036a3dc27",
+      "source": "api",
+      "filename": "extraction-failure.pdf",
+      "mime_type": "application/pdf",
+      "sha256": "388c1bf30657e05ac5667a4aacdb277a95f1626e095d10e707c4715964b3636f",
+      "byte_size": 732,
+      "status": "EXTRACTION_FAILED",
+      "revision": 1,
+      "review_required": false,
+      "validation_run_id": null,
+      "validated_revision": null,
+      "vendor_id": null,
+      "created_at": "2026-11-14T07:04:02.457774Z",
+      "updated_at": "2026-11-14T07:04:02.478481Z",
+      "current_data": null,
+      "issue_codes": [],
+      "extracted_data": null,
+      "validations": [],
+      "processing_attempts": [
+        {
+          "id": "e7f4ed38-296d-4e02-8312-29ce91953ef2",
+          "ordinal": 1,
+          "status": "FAILED",
+          "created_at": "2026-11-14T07:04:02.471027Z",
+          "finished_at": "2026-11-14T07:04:02.480035Z",
+          "error_code": "MOCK_EXTRACTION_FAILED"
+        }
+      ],
+      "reviews": [],
+      "ledger_entry_id": null
+    }
+  ],
+  "audits": {
+    "97c1ba09-1d02-4e12-935a-af7b2caa81f9": [
+      {
+        "id": "c0581b37-59e9-4b1a-ad7f-a376006187ff",
+        "actor": "synthetic-operator",
+        "event_type": "INVOICE_RECEIVED",
+        "details": {
+          "sha256": "298e664a695655b70e69120fccfadba9e1884bd552844c1219edd5d100ec3107",
+          "source": "api",
+          "status": "RECEIVED"
+        },
+        "created_at": "2026-11-14T07:04:01.389829Z"
+      },
+      {
+        "id": "650ec144-b7d7-4b1a-9ed3-b4cd95fad13b",
+        "actor": "synthetic-operator",
+        "event_type": "STATE_CHANGED",
+        "details": {
+          "to": "EXTRACTING",
+          "from": "RECEIVED",
+          "attempt_id": "a45248e1-b1bc-4b10-a91a-588ff4acf072"
+        },
+        "created_at": "2026-11-14T07:04:01.420407Z"
+      },
+      {
+        "id": "2283eb1c-8e7e-4efb-9602-6f67dc02c124",
+        "actor": "synthetic-operator",
+        "event_type": "VALIDATION_COMPLETED",
+        "details": {
+          "revision": 1,
+          "blocker_codes": [],
+          "validation_run_id": "1d248323-feff-436e-b1bb-d3b9b2cceaa9"
+        },
+        "created_at": "2026-11-14T07:04:01.441713Z"
+      },
+      {
+        "id": "651549f6-091f-4d8c-974f-08ac5c5e735c",
+        "actor": "synthetic-operator",
+        "event_type": "STATE_CHANGED",
+        "details": {
+          "to": "READY_TO_POST",
+          "from": "EXTRACTING",
+          "attempt_id": "a45248e1-b1bc-4b10-a91a-588ff4acf072"
+        },
+        "created_at": "2026-11-14T07:04:01.441713Z"
+      },
+      {
+        "id": "aa04044e-7be5-4824-9d52-6ebb15234334",
+        "actor": "synthetic-operator",
+        "event_type": "LEDGER_POSTED",
+        "details": {
+          "total": "1150.00",
+          "currency": "USD",
+          "revision": 1,
+          "ledger_entry_id": "08d0cfe6-7f71-4619-8a6f-31343e4671e5"
+        },
+        "created_at": "2026-11-14T07:04:01.495901Z"
+      },
+      {
+        "id": "bf51e4f3-564b-42d5-9b93-bb2cc8cbf2bb",
+        "actor": "synthetic-operator",
+        "event_type": "STATE_CHANGED",
+        "details": {
+          "to": "POSTED",
+          "from": "READY_TO_POST",
+          "revision": 1,
+          "ledger_entry_id": "08d0cfe6-7f71-4619-8a6f-31343e4671e5"
+        },
+        "created_at": "2026-11-14T07:04:01.495901Z"
+      },
+      {
+        "id": "cfca3d5b-4ccb-404a-a232-893db1c6afa4",
+        "actor": "synthetic-operator",
+        "event_type": "VALIDATION_COMPLETED",
+        "details": {
+          "revision": 1,
+          "blocker_codes": [],
+          "validation_run_id": "e412299d-65ba-4e05-aeea-8f23a98313cb"
+        },
+        "created_at": "2026-11-14T07:04:01.495901Z"
+      },
+      {
+        "id": "ef5db1e4-00c3-4eed-8e56-6586ad369f33",
+        "actor": "synthetic-operator",
+        "event_type": "DUPLICATE_UPLOAD_RETURNED",
+        "details": {
+          "sha256": "298e664a695655b70e69120fccfadba9e1884bd552844c1219edd5d100ec3107"
+        },
+        "created_at": "2026-11-14T07:04:01.947157Z"
+      }
+    ],
+    "d2694bf1-5f1d-4740-8143-3081de5e1a0c": [
+      {
+        "id": "98e16ebf-63c5-446f-a282-58cbfdd1fa8d",
+        "actor": "synthetic-operator",
+        "event_type": "INVOICE_RECEIVED",
+        "details": {
+          "sha256": "b1cf6f7fa916889c6e5ebd55bda1f7e20f8d4f4ac60c964ccacc9f2d7030f31f",
+          "source": "api",
+          "status": "RECEIVED"
+        },
+        "created_at": "2026-11-14T07:04:01.532957Z"
+      },
+      {
+        "id": "7ec430a6-0d96-467a-ae51-095f77161a63",
+        "actor": "synthetic-operator",
+        "event_type": "STATE_CHANGED",
+        "details": {
+          "to": "EXTRACTING",
+          "from": "RECEIVED",
+          "attempt_id": "7475a96d-3562-4559-8b40-56b6c6b02c4c"
+        },
+        "created_at": "2026-11-14T07:04:01.548469Z"
+      },
+      {
+        "id": "c4c464fd-e7d2-4319-8c01-8afeab2027f3",
+        "actor": "synthetic-operator",
+        "event_type": "VALIDATION_COMPLETED",
+        "details": {
+          "revision": 1,
+          "blocker_codes": [],
+          "validation_run_id": "af65630d-bbf2-472c-9193-ca8a882f7d11"
+        },
+        "created_at": "2026-11-14T07:04:01.557777Z"
+      },
+      {
+        "id": "de205d31-ff02-46f1-ac68-1cb4b5ebcba0",
+        "actor": "synthetic-operator",
+        "event_type": "STATE_CHANGED",
+        "details": {
+          "to": "READY_TO_POST",
+          "from": "EXTRACTING",
+          "attempt_id": "7475a96d-3562-4559-8b40-56b6c6b02c4c"
+        },
+        "created_at": "2026-11-14T07:04:01.557777Z"
+      }
+    ],
+    "66844c63-c4c0-4b38-ae47-7af7c53d2131": [
+      {
+        "id": "5ca35518-ca65-4e0b-a169-c7fb7f8a345d",
+        "actor": "synthetic-operator",
+        "event_type": "INVOICE_RECEIVED",
+        "details": {
+          "sha256": "ec4988b91ab72bdd3402f666820ee13bb6a47ca68fac9aed139a6648df80471f",
+          "source": "api",
+          "status": "RECEIVED"
+        },
+        "created_at": "2026-11-14T07:04:01.588333Z"
+      },
+      {
+        "id": "0bc66d3b-cff9-4c62-a5a5-8428dcd7e22b",
+        "actor": "synthetic-operator",
+        "event_type": "STATE_CHANGED",
+        "details": {
+          "to": "EXTRACTING",
+          "from": "RECEIVED",
+          "attempt_id": "beec6dae-f2ed-4efe-b17d-455e49839319"
+        },
+        "created_at": "2026-11-14T07:04:01.606855Z"
+      },
+      {
+        "id": "47892039-6c28-4f69-81d9-1350023a0377",
+        "actor": "synthetic-operator",
+        "event_type": "VALIDATION_COMPLETED",
+        "details": {
+          "revision": 1,
+          "blocker_codes": [],
+          "validation_run_id": "d2e6acac-5eb9-4d6b-8a28-ab469f200314"
+        },
+        "created_at": "2026-11-14T07:04:01.616328Z"
+      },
+      {
+        "id": "bd00ad26-082a-4565-9abf-d279a452c65e",
+        "actor": "synthetic-operator",
+        "event_type": "STATE_CHANGED",
+        "details": {
+          "to": "READY_TO_POST",
+          "from": "EXTRACTING",
+          "attempt_id": "beec6dae-f2ed-4efe-b17d-455e49839319"
+        },
+        "created_at": "2026-11-14T07:04:01.616328Z"
+      }
+    ],
+    "e84b0871-834f-41b9-8f78-dbdc797db864": [
+      {
+        "id": "ef1fb306-26aa-4122-8d06-c2d81436e2e1",
+        "actor": "synthetic-operator",
+        "event_type": "INVOICE_RECEIVED",
+        "details": {
+          "sha256": "611498523440ad41a992ed1244bbedd21f6402b90b74e1fea706acfc2cab3c6c",
+          "source": "api",
+          "status": "RECEIVED"
+        },
+        "created_at": "2026-11-14T07:04:01.645860Z"
+      },
+      {
+        "id": "4c8213a0-5a33-468a-a740-75b2d686e85f",
+        "actor": "synthetic-operator",
+        "event_type": "STATE_CHANGED",
+        "details": {
+          "to": "EXTRACTING",
+          "from": "RECEIVED",
+          "attempt_id": "de5bf53a-395f-4746-adb1-f54bff80bbdf"
+        },
+        "created_at": "2026-11-14T07:04:01.663796Z"
+      },
+      {
+        "id": "60a431f8-f791-4c2e-89b9-00c93608bc84",
+        "actor": "synthetic-operator",
+        "event_type": "STATE_CHANGED",
+        "details": {
+          "to": "READY_TO_POST",
+          "from": "EXTRACTING",
+          "attempt_id": "de5bf53a-395f-4746-adb1-f54bff80bbdf"
+        },
+        "created_at": "2026-11-14T07:04:01.673596Z"
+      },
+      {
+        "id": "9d640cde-c1dd-4f86-9d83-3b9efe5f90a4",
+        "actor": "synthetic-operator",
+        "event_type": "VALIDATION_COMPLETED",
+        "details": {
+          "revision": 1,
+          "blocker_codes": [],
+          "validation_run_id": "e4bc867a-bca6-434f-966f-72a62245ffc9"
+        },
+        "created_at": "2026-11-14T07:04:01.673596Z"
+      }
+    ],
+    "04b10117-04cb-4f40-a4a1-65207c018a32": [
+      {
+        "id": "224d3ca5-085b-48f1-9ff5-c5938a34fd4b",
+        "actor": "synthetic-operator",
+        "event_type": "INVOICE_RECEIVED",
+        "details": {
+          "sha256": "5bfe0fc7e45799797cb6b0b0595d8e1916dc299e729e0b1eb4bccd176a1d41c1",
+          "source": "api",
+          "status": "RECEIVED"
+        },
+        "created_at": "2026-11-14T07:04:01.702157Z"
+      },
+      {
+        "id": "c6d6a9c6-9aa7-409d-80dd-8fc71074f6f0",
+        "actor": "synthetic-operator",
+        "event_type": "STATE_CHANGED",
+        "details": {
+          "to": "EXTRACTING",
+          "from": "RECEIVED",
+          "attempt_id": "2c424dc9-0223-43a4-9bc4-662bf2153711"
+        },
+        "created_at": "2026-11-14T07:04:01.716964Z"
+      },
+      {
+        "id": "71b93a44-a242-447a-8cfa-dc4c357ef9f3",
+        "actor": "synthetic-operator",
+        "event_type": "STATE_CHANGED",
+        "details": {
+          "to": "READY_TO_POST",
+          "from": "EXTRACTING",
+          "attempt_id": "2c424dc9-0223-43a4-9bc4-662bf2153711"
+        },
+        "created_at": "2026-11-14T07:04:01.730205Z"
+      },
+      {
+        "id": "9d9cc48d-0d86-4c5b-ae84-e8852b6e1b96",
+        "actor": "synthetic-operator",
+        "event_type": "VALIDATION_COMPLETED",
+        "details": {
+          "revision": 1,
+          "blocker_codes": [],
+          "validation_run_id": "afd2e6b4-edd6-4ecf-b427-0642452c3f71"
+        },
+        "created_at": "2026-11-14T07:04:01.730205Z"
+      }
+    ],
+    "be15b4b1-5e2f-4f38-99c7-de37aa9fcdc3": [
+      {
+        "id": "0aaeef9d-1cba-4e86-900b-88c0b43650e3",
+        "actor": "synthetic-operator",
+        "event_type": "INVOICE_RECEIVED",
+        "details": {
+          "sha256": "caaf5d9708f285123840ad93cd5a6a7769da148982e3bf95edd554dd3d401f58",
+          "source": "api",
+          "status": "RECEIVED"
+        },
+        "created_at": "2026-11-14T07:04:01.759666Z"
+      },
+      {
+        "id": "f83456d7-c843-4c10-9fd3-a78484323dd8",
+        "actor": "synthetic-operator",
+        "event_type": "STATE_CHANGED",
+        "details": {
+          "to": "EXTRACTING",
+          "from": "RECEIVED",
+          "attempt_id": "e7ea4ecf-6f66-4565-80d4-41055b74e9f3"
+        },
+        "created_at": "2026-11-14T07:04:01.776915Z"
+      },
+      {
+        "id": "75512188-0d01-4afa-a35b-0b8114c7a3db",
+        "actor": "synthetic-operator",
+        "event_type": "STATE_CHANGED",
+        "details": {
+          "to": "NEEDS_REVIEW",
+          "from": "EXTRACTING",
+          "attempt_id": "e7ea4ecf-6f66-4565-80d4-41055b74e9f3"
+        },
+        "created_at": "2026-11-14T07:04:01.787808Z"
+      },
+      {
+        "id": "e5c7378c-cd28-4f46-bb76-a8549c2acd7d",
+        "actor": "synthetic-operator",
+        "event_type": "VALIDATION_COMPLETED",
+        "details": {
+          "revision": 1,
+          "blocker_codes": [
+            "TOTAL_MISMATCH"
+          ],
+          "validation_run_id": "de3b7b5e-2bbf-4aac-b504-310e837f0236"
+        },
+        "created_at": "2026-11-14T07:04:01.787808Z"
+      }
+    ],
+    "4e1658ba-c415-4d61-9971-a69adcd51ff4": [
+      {
+        "id": "7c44220e-ccd8-4dd6-9188-ac3708a8d755",
+        "actor": "synthetic-operator",
+        "event_type": "INVOICE_RECEIVED",
+        "details": {
+          "sha256": "403ef7c8327a604bd4edc7bc004e082697e2983ecf810eff0359d9201bb45899",
+          "source": "api",
+          "status": "RECEIVED"
+        },
+        "created_at": "2026-11-14T07:04:01.822593Z"
+      },
+      {
+        "id": "78061f5f-b846-45f2-8757-f63ed59c1ed7",
+        "actor": "synthetic-operator",
+        "event_type": "STATE_CHANGED",
+        "details": {
+          "to": "EXTRACTING",
+          "from": "RECEIVED",
+          "attempt_id": "bad4bd85-00eb-49ca-b07a-3e806683540c"
+        },
+        "created_at": "2026-11-14T07:04:01.840297Z"
+      },
+      {
+        "id": "57c4c1bb-b86d-4383-be2e-f29f3350be8d",
+        "actor": "synthetic-operator",
+        "event_type": "VALIDATION_COMPLETED",
+        "details": {
+          "revision": 1,
+          "blocker_codes": [
+            "LINE_TOTAL_MISMATCH"
+          ],
+          "validation_run_id": "46a81a64-f19e-47f0-bfca-8501792ea98f"
+        },
+        "created_at": "2026-11-14T07:04:01.851201Z"
+      },
+      {
+        "id": "cdea6a89-7e47-491f-bbea-89f2fce7908a",
+        "actor": "synthetic-operator",
+        "event_type": "STATE_CHANGED",
+        "details": {
+          "to": "NEEDS_REVIEW",
+          "from": "EXTRACTING",
+          "attempt_id": "bad4bd85-00eb-49ca-b07a-3e806683540c"
+        },
+        "created_at": "2026-11-14T07:04:01.851201Z"
+      }
+    ],
+    "6e373e8c-ea69-49dd-a23a-a38f6021e2ca": [
+      {
+        "id": "b81c0763-5cd2-47cb-9f8f-7c836c247e3c",
+        "actor": "synthetic-operator",
+        "event_type": "INVOICE_RECEIVED",
+        "details": {
+          "sha256": "409aebe27e3ee5f37af2e72827cac95ce783da77f3c6a6fb04e1057657408d1d",
+          "source": "api",
+          "status": "RECEIVED"
+        },
+        "created_at": "2026-11-14T07:04:01.887129Z"
+      },
+      {
+        "id": "91093a58-f71c-4e2b-951d-00a302075d6b",
+        "actor": "synthetic-operator",
+        "event_type": "STATE_CHANGED",
+        "details": {
+          "to": "EXTRACTING",
+          "from": "RECEIVED",
+          "attempt_id": "18f26550-8f48-491b-ae5a-7d4a3e91b323"
+        },
+        "created_at": "2026-11-14T07:04:01.904798Z"
+      },
+      {
+        "id": "9f3dba53-b2b6-4341-851c-13fab4bc7034",
+        "actor": "synthetic-operator",
+        "event_type": "STATE_CHANGED",
+        "details": {
+          "to": "NEEDS_REVIEW",
+          "from": "EXTRACTING",
+          "attempt_id": "18f26550-8f48-491b-ae5a-7d4a3e91b323"
+        },
+        "created_at": "2026-11-14T07:04:01.914716Z"
+      },
+      {
+        "id": "a51069c1-1623-4c82-a360-af5f0518d900",
+        "actor": "synthetic-operator",
+        "event_type": "VALIDATION_COMPLETED",
+        "details": {
+          "revision": 1,
+          "blocker_codes": [
+            "TAX_RATE_MISMATCH"
+          ],
+          "validation_run_id": "124858b5-097b-42d9-a301-ffb8810339c8"
+        },
+        "created_at": "2026-11-14T07:04:01.914716Z"
+      }
+    ],
+    "09162006-8b5b-48de-ac15-fb64e2994394": [
+      {
+        "id": "04c5ec90-3870-46b6-9d05-b164f81585f8",
+        "actor": "synthetic-operator",
+        "event_type": "INVOICE_RECEIVED",
+        "details": {
+          "sha256": "39fa344a0c380f711ccc16e533f760734b0f0698a34ed205102c0775e3dfc7e0",
+          "source": "api",
+          "status": "RECEIVED"
+        },
+        "created_at": "2026-11-14T07:04:01.962610Z"
+      },
+      {
+        "id": "3ae68102-3347-4879-a995-eb54fe9d79bc",
+        "actor": "synthetic-operator",
+        "event_type": "STATE_CHANGED",
+        "details": {
+          "to": "EXTRACTING",
+          "from": "RECEIVED",
+          "attempt_id": "a69f3883-b2dd-4887-a1f5-9ab8c23d574e"
+        },
+        "created_at": "2026-11-14T07:04:01.978529Z"
+      },
+      {
+        "id": "740d18f1-05cf-48e0-ad33-e3236b72b599",
+        "actor": "synthetic-operator",
+        "event_type": "VALIDATION_COMPLETED",
+        "details": {
+          "revision": 1,
+          "blocker_codes": [
+            "DUPLICATE_INVOICE"
+          ],
+          "validation_run_id": "2e5b2196-4337-4bee-a914-ef6d5fcb2cfb"
+        },
+        "created_at": "2026-11-14T07:04:01.987395Z"
+      },
+      {
+        "id": "b8e7a256-d680-4037-9fbf-aee3c8764c35",
+        "actor": "synthetic-operator",
+        "event_type": "STATE_CHANGED",
+        "details": {
+          "to": "NEEDS_REVIEW",
+          "from": "EXTRACTING",
+          "attempt_id": "a69f3883-b2dd-4887-a1f5-9ab8c23d574e"
+        },
+        "created_at": "2026-11-14T07:04:01.987395Z"
+      }
+    ],
+    "c4d27588-689c-43e9-8dd7-be809e3d851c": [
+      {
+        "id": "c42c491a-2e8b-427a-9372-dd1b36698e68",
+        "actor": "synthetic-operator",
+        "event_type": "INVOICE_RECEIVED",
+        "details": {
+          "sha256": "9687f513b5a4946b318618e3aece20885864d4fb8cc14123628b42879d87d994",
+          "source": "api",
+          "status": "RECEIVED"
+        },
+        "created_at": "2026-11-14T07:04:02.014155Z"
+      },
+      {
+        "id": "83f4162a-8341-4781-915a-bd3b9763f3c8",
+        "actor": "synthetic-operator",
+        "event_type": "STATE_CHANGED",
+        "details": {
+          "to": "EXTRACTING",
+          "from": "RECEIVED",
+          "attempt_id": "0a16eac2-fd01-495f-a8e4-fb4d6f886beb"
+        },
+        "created_at": "2026-11-14T07:04:02.032001Z"
+      },
+      {
+        "id": "2b37d0d3-6b32-4167-b21f-b5680018015d",
+        "actor": "synthetic-operator",
+        "event_type": "VALIDATION_COMPLETED",
+        "details": {
+          "revision": 1,
+          "blocker_codes": [
+            "DUPLICATE_INVOICE"
+          ],
+          "validation_run_id": "1aa0d507-bdb6-42bc-bbff-e5d2f0d383c9"
+        },
+        "created_at": "2026-11-14T07:04:02.052776Z"
+      },
+      {
+        "id": "5f330220-7488-4ee1-b028-b31d0310397e",
+        "actor": "synthetic-operator",
+        "event_type": "STATE_CHANGED",
+        "details": {
+          "to": "NEEDS_REVIEW",
+          "from": "EXTRACTING",
+          "attempt_id": "0a16eac2-fd01-495f-a8e4-fb4d6f886beb"
+        },
+        "created_at": "2026-11-14T07:04:02.052776Z"
+      }
+    ],
+    "ec554b90-3986-4ae7-bd89-b38839302f75": [
+      {
+        "id": "5313cb58-0ad5-4999-85e4-a3a77a0beb2b",
+        "actor": "synthetic-operator",
+        "event_type": "INVOICE_RECEIVED",
+        "details": {
+          "sha256": "73de8dc6f54687bf8e335d8f84e7f94dcf9f9ba1482458458845a535ed0a1a40",
+          "source": "api",
+          "status": "RECEIVED"
+        },
+        "created_at": "2026-11-14T07:04:02.094229Z"
+      },
+      {
+        "id": "a30b12b7-5cfc-49d9-b2b4-9ec3d1327f94",
+        "actor": "synthetic-operator",
+        "event_type": "STATE_CHANGED",
+        "details": {
+          "to": "EXTRACTING",
+          "from": "RECEIVED",
+          "attempt_id": "d787cc63-9ef1-487f-a333-513fd93d73cc"
+        },
+        "created_at": "2026-11-14T07:04:02.114223Z"
+      },
+      {
+        "id": "9f075224-f4e3-47a9-ad6d-2dc4f7204ea2",
+        "actor": "synthetic-operator",
+        "event_type": "STATE_CHANGED",
+        "details": {
+          "to": "NEEDS_REVIEW",
+          "from": "EXTRACTING",
+          "attempt_id": "d787cc63-9ef1-487f-a333-513fd93d73cc"
+        },
+        "created_at": "2026-11-14T07:04:02.127483Z"
+      },
+      {
+        "id": "e84954f3-8107-4571-aa0c-b560d5399639",
+        "actor": "synthetic-operator",
+        "event_type": "VALIDATION_COMPLETED",
+        "details": {
+          "revision": 1,
+          "blocker_codes": [
+            "UNAPPROVED_VENDOR"
+          ],
+          "validation_run_id": "38943744-0e72-4325-ad67-5030c23c7660"
+        },
+        "created_at": "2026-11-14T07:04:02.127483Z"
+      }
+    ],
+    "28907598-c04b-4386-9a17-9cbe96c07dd0": [
+      {
+        "id": "85ab7eef-d751-48ab-ba2c-8654b104fdab",
+        "actor": "synthetic-operator",
+        "event_type": "INVOICE_RECEIVED",
+        "details": {
+          "sha256": "958b97047c8063ca299c141b207cf2361bec5e63ff5721305e7282534b66f2ea",
+          "source": "api",
+          "status": "RECEIVED"
+        },
+        "created_at": "2026-11-14T07:04:02.186364Z"
+      },
+      {
+        "id": "86a2954d-6758-49d0-94aa-7ca51d58cc21",
+        "actor": "synthetic-operator",
+        "event_type": "STATE_CHANGED",
+        "details": {
+          "to": "EXTRACTING",
+          "from": "RECEIVED",
+          "attempt_id": "b4393f65-0598-4b5c-82c1-e136af781eca"
+        },
+        "created_at": "2026-11-14T07:04:02.218099Z"
+      },
+      {
+        "id": "411883bb-e715-4d4c-880f-148e92fe258c",
+        "actor": "synthetic-operator",
+        "event_type": "STATE_CHANGED",
+        "details": {
+          "to": "NEEDS_REVIEW",
+          "from": "EXTRACTING",
+          "attempt_id": "b4393f65-0598-4b5c-82c1-e136af781eca"
+        },
+        "created_at": "2026-11-14T07:04:02.237631Z"
+      },
+      {
+        "id": "c8ca716b-4082-4668-b9f3-fd92e69fd94d",
+        "actor": "synthetic-operator",
+        "event_type": "VALIDATION_COMPLETED",
+        "details": {
+          "revision": 1,
+          "blocker_codes": [
+            "UNAPPROVED_VENDOR"
+          ],
+          "validation_run_id": "88f000f5-76b5-4720-b7cc-76018c58c4c6"
+        },
+        "created_at": "2026-11-14T07:04:02.237631Z"
+      }
+    ],
+    "6d60f791-f5c3-441d-aad1-445548d3a2b6": [
+      {
+        "id": "f77c97a1-7b7d-4529-8b4b-52a736caf907",
+        "actor": "synthetic-operator",
+        "event_type": "INVOICE_RECEIVED",
+        "details": {
+          "sha256": "5f62d57a95ac1093dab7f7c7a3e5f6413b380f609613dfc7a0270e29b19cfcb8",
+          "source": "api",
+          "status": "RECEIVED"
+        },
+        "created_at": "2026-11-14T07:04:02.283695Z"
+      },
+      {
+        "id": "0924fb0c-cf3d-421b-97f8-938c81053cb5",
+        "actor": "synthetic-operator",
+        "event_type": "STATE_CHANGED",
+        "details": {
+          "to": "EXTRACTING",
+          "from": "RECEIVED",
+          "attempt_id": "5857ee9c-f0fc-4324-8cf5-d0b3cd7faddc"
+        },
+        "created_at": "2026-11-14T07:04:02.313793Z"
+      },
+      {
+        "id": "5ba7c09b-7553-4ac5-94b5-7165f65ea20a",
+        "actor": "synthetic-operator",
+        "event_type": "STATE_CHANGED",
+        "details": {
+          "to": "NEEDS_REVIEW",
+          "from": "EXTRACTING",
+          "attempt_id": "5857ee9c-f0fc-4324-8cf5-d0b3cd7faddc"
+        },
+        "created_at": "2026-11-14T07:04:02.342798Z"
+      },
+      {
+        "id": "f71d4361-b320-4b0a-b50b-6c4a943ed5b4",
+        "actor": "synthetic-operator",
+        "event_type": "VALIDATION_COMPLETED",
+        "details": {
+          "revision": 1,
+          "blocker_codes": [
+            "MISSING_REQUIRED_FIELD"
+          ],
+          "validation_run_id": "9c1c38d6-7633-4d59-97f6-b8153974366b"
+        },
+        "created_at": "2026-11-14T07:04:02.342798Z"
+      }
+    ],
+    "45d213d6-fad2-4f89-895c-af48b008cd18": [
+      {
+        "id": "0b8a942a-b735-48af-8d19-0c7ea3a16e26",
+        "actor": "synthetic-operator",
+        "event_type": "INVOICE_RECEIVED",
+        "details": {
+          "sha256": "896e894876e520d48d22d1959e6d81f966745b6766cb4947270721dcb689cf4c",
+          "source": "api",
+          "status": "RECEIVED"
+        },
+        "created_at": "2026-11-14T07:04:02.401233Z"
+      },
+      {
+        "id": "ec5d6bef-df15-4099-b763-c2a1abd754fa",
+        "actor": "synthetic-operator",
+        "event_type": "STATE_CHANGED",
+        "details": {
+          "to": "EXTRACTING",
+          "from": "RECEIVED",
+          "attempt_id": "e5895e89-7b05-4dd7-bc9e-59b20c907108"
+        },
+        "created_at": "2026-11-14T07:04:02.421987Z"
+      },
+      {
+        "id": "0ad06653-9ac5-49ed-9643-1d51dd05bdc0",
+        "actor": "synthetic-operator",
+        "event_type": "VALIDATION_COMPLETED",
+        "details": {
+          "revision": 1,
+          "blocker_codes": [
+            "MISSING_REQUIRED_FIELD"
+          ],
+          "validation_run_id": "f8a80410-5da9-425c-bf6c-cdd688603423"
+        },
+        "created_at": "2026-11-14T07:04:02.431082Z"
+      },
+      {
+        "id": "1487b0d1-e01c-440d-91a2-709e80763e09",
+        "actor": "synthetic-operator",
+        "event_type": "STATE_CHANGED",
+        "details": {
+          "to": "NEEDS_REVIEW",
+          "from": "EXTRACTING",
+          "attempt_id": "e5895e89-7b05-4dd7-bc9e-59b20c907108"
+        },
+        "created_at": "2026-11-14T07:04:02.431082Z"
+      }
+    ],
+    "b3c6ccae-aa73-44c8-9da0-db0036a3dc27": [
+      {
+        "id": "4f1deaaa-53a1-4486-9a74-f6bf651b399a",
+        "actor": "synthetic-operator",
+        "event_type": "INVOICE_RECEIVED",
+        "details": {
+          "sha256": "388c1bf30657e05ac5667a4aacdb277a95f1626e095d10e707c4715964b3636f",
+          "source": "api",
+          "status": "RECEIVED"
+        },
+        "created_at": "2026-11-14T07:04:02.457774Z"
+      },
+      {
+        "id": "6c3313f7-4ab2-4475-a07c-2ef7ca33f9a8",
+        "actor": "synthetic-operator",
+        "event_type": "STATE_CHANGED",
+        "details": {
+          "to": "EXTRACTING",
+          "from": "RECEIVED",
+          "attempt_id": "e7f4ed38-296d-4e02-8312-29ce91953ef2"
+        },
+        "created_at": "2026-11-14T07:04:02.471027Z"
+      },
+      {
+        "id": "d29a437a-1832-4984-8bcf-31f179401cb2",
+        "actor": "synthetic-operator",
+        "event_type": "STATE_CHANGED",
+        "details": {
+          "to": "EXTRACTION_FAILED",
+          "from": "EXTRACTING",
+          "attempt_id": "e7f4ed38-296d-4e02-8312-29ce91953ef2",
+          "error_code": "MOCK_EXTRACTION_FAILED"
+        },
+        "created_at": "2026-11-14T07:04:02.478481Z"
+      }
+    ]
+  },
+  "vendors": [
+    {
+      "id": "4a6de922-f923-473b-9f30-2c446ba2f79d",
+      "display_name": "Alpha Office Supplies",
+      "expected_currency": "USD",
+      "baseline_amount_limit": "5000.00",
+      "is_approved": true
+    },
+    {
+      "id": "8928a7d9-c157-49de-bc58-a4e9aaa849c9",
+      "display_name": "Beta Tech",
+      "expected_currency": "USD",
+      "baseline_amount_limit": "10000.00",
+      "is_approved": true
+    },
+    {
+      "id": "9bee7ce5-0416-4c7f-aa7c-f1b1b395552b",
+      "display_name": "Gamma Building Materials",
+      "expected_currency": "USD",
+      "baseline_amount_limit": "20000.00",
+      "is_approved": true
+    }
+  ],
+  "ledger": [
+    {
+      "id": "08d0cfe6-7f71-4619-8a6f-31343e4671e5",
+      "invoice_id": "97c1ba09-1d02-4e12-935a-af7b2caa81f9",
+      "vendor_name": "Alpha Office Supplies",
+      "invoice_number": "INV-A-001",
+      "invoice_date": "2026-11-13",
+      "invoice_revision": 1,
+      "currency": "USD",
+      "total": "1150.00",
+      "posted_at": "2026-11-14T07:04:01.495901Z",
+      "posted_by": "synthetic-operator"
+    }
+  ],
+  "stats": {
+    "total_invoices": 15,
+    "by_status": {
+      "RECEIVED": 0,
+      "EXTRACTING": 0,
+      "NEEDS_REVIEW": 9,
+      "READY_TO_POST": 4,
+      "POSTED": 1,
+      "REJECTED": 0,
+      "EXTRACTION_FAILED": 1
+    },
+    "posted_totals_by_currency": {
+      "USD": "1150.00"
+    },
+    "flagged_totals_by_currency": {
+      "USD": "12850.00"
+    },
+    "duplicate_invoices": 2,
+    "recent_activity": [
+      {
+        "id": "d29a437a-1832-4984-8bcf-31f179401cb2",
+        "invoice_id": "b3c6ccae-aa73-44c8-9da0-db0036a3dc27",
+        "event_type": "STATE_CHANGED",
+        "actor": "synthetic-operator",
+        "created_at": "2026-11-14T07:04:02.478481+00:00"
+      },
+      {
+        "id": "6c3313f7-4ab2-4475-a07c-2ef7ca33f9a8",
+        "invoice_id": "b3c6ccae-aa73-44c8-9da0-db0036a3dc27",
+        "event_type": "STATE_CHANGED",
+        "actor": "synthetic-operator",
+        "created_at": "2026-11-14T07:04:02.471027+00:00"
+      },
+      {
+        "id": "4f1deaaa-53a1-4486-9a74-f6bf651b399a",
+        "invoice_id": "b3c6ccae-aa73-44c8-9da0-db0036a3dc27",
+        "event_type": "INVOICE_RECEIVED",
+        "actor": "synthetic-operator",
+        "created_at": "2026-11-14T07:04:02.457774+00:00"
+      },
+      {
+        "id": "0ad06653-9ac5-49ed-9643-1d51dd05bdc0",
+        "invoice_id": "45d213d6-fad2-4f89-895c-af48b008cd18",
+        "event_type": "VALIDATION_COMPLETED",
+        "actor": "synthetic-operator",
+        "created_at": "2026-11-14T07:04:02.431082+00:00"
+      },
+      {
+        "id": "1487b0d1-e01c-440d-91a2-709e80763e09",
+        "invoice_id": "45d213d6-fad2-4f89-895c-af48b008cd18",
+        "event_type": "STATE_CHANGED",
+        "actor": "synthetic-operator",
+        "created_at": "2026-11-14T07:04:02.431082+00:00"
+      },
+      {
+        "id": "ec5d6bef-df15-4099-b763-c2a1abd754fa",
+        "invoice_id": "45d213d6-fad2-4f89-895c-af48b008cd18",
+        "event_type": "STATE_CHANGED",
+        "actor": "synthetic-operator",
+        "created_at": "2026-11-14T07:04:02.421987+00:00"
+      },
+      {
+        "id": "0b8a942a-b735-48af-8d19-0c7ea3a16e26",
+        "invoice_id": "45d213d6-fad2-4f89-895c-af48b008cd18",
+        "event_type": "INVOICE_RECEIVED",
+        "actor": "synthetic-operator",
+        "created_at": "2026-11-14T07:04:02.401233+00:00"
+      },
+      {
+        "id": "5ba7c09b-7553-4ac5-94b5-7165f65ea20a",
+        "invoice_id": "6d60f791-f5c3-441d-aad1-445548d3a2b6",
+        "event_type": "STATE_CHANGED",
+        "actor": "synthetic-operator",
+        "created_at": "2026-11-14T07:04:02.342798+00:00"
+      }
+    ]
+  }
+}
