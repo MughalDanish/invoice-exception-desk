@@ -11,6 +11,7 @@ from sqlalchemy import select
 from app.core.errors import AppError
 from app.db.models import InvestigationRun, Invoice, InvoiceStatus, Severity, ValidationResult
 from app.modules.approvals.service import payload_hash
+from app.modules.investigation.documents import capture_documents
 from app.modules.investigation.graph import build_graph
 from app.modules.investigation.lookups import capture_lookups
 from app.modules.investigation.providers import MockInvestigationProvider
@@ -73,6 +74,7 @@ def snapshot_invoice(session, invoice) -> InvoiceSnapshot:
         validation_batch_id=invoice.validation_run_id,
         document_sha256=invoice.sha256,
         lookup=capture_lookups(session, invoice),
+        documents=capture_documents(session, invoice),
         currency=currency,
         blockers=tuple(
             RuleEvidence(
@@ -98,6 +100,11 @@ def matches(invoice, run, session) -> bool:
         and invoice.validation_run_id == run.validation_batch_id
         and payload_hash(invoice.current_data) == run.payload_sha256
         and invoice.sha256 == run.snapshot["document_sha256"]
+        and (
+            run.snapshot.get("documents") is None
+            or capture_documents(session, invoice).model_dump(mode="json")
+            == run.snapshot["documents"]
+        )
         and (
             "lookup" not in run.snapshot
             or run.snapshot["lookup"] is None
@@ -155,8 +162,8 @@ def start_investigation(session, invoice_id: uuid.UUID, body: InvestigationReque
             idempotency_key=body.idempotency_key,
             status="RUNNING",
             mode="mock",
-            provider_version="scripted-supervisor-v2",
-            policy_version="day-7-v1",
+            provider_version="scripted-parallel-v3",
+            policy_version="day-8-v1",
             requested_by=actor,
             snapshot=snapshot.model_dump(mode="json"),
         )
@@ -172,7 +179,7 @@ def start_investigation(session, invoice_id: uuid.UUID, body: InvestigationReque
         with tracing_context(enabled=False):
             result = build_graph(MockInvestigationProvider()).invoke(
                 {"run_id": run_id, "snapshot": snapshot, "findings": {}},
-                config={"recursion_limit": 12, "callbacks": []},
+                config={"recursion_limit": 12, "max_concurrency": 3, "callbacks": []},
             )
         report = InvestigationReport.model_validate(result["report"])
     except Exception:

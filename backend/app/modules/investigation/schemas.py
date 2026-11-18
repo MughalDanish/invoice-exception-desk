@@ -6,7 +6,7 @@ from decimal import Decimal
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 Text = Annotated[str, Field(min_length=1, max_length=1200)]
 Digest = Annotated[str, Field(pattern=r"^[a-f0-9]{64}$")]
@@ -72,14 +72,30 @@ class LookupSnapshot(Contract):
     history_truncated: bool = False
 
 
-Role = Literal["financial", "supplier"]
-TaskKind = Literal["arithmetic", "duplicate", "supplier", "outlier", "unsupported"]
+class DocumentEvidence(Contract):
+    source_id: UUID
+    version: Annotated[int, Field(ge=1)]
+    invoice_id: UUID
+    supplier_key: Annotated[str, Field(min_length=1, max_length=200)]
+    kind: Literal["PO", "RECEIPT", "EMAIL"]
+    content_sha256: Digest
+    text: Annotated[str, Field(min_length=1, max_length=1000)]
+
+
+class DocumentSnapshot(Contract):
+    items: Annotated[tuple[DocumentEvidence, ...], Field(max_length=12)] = ()
+    truncated: bool = False
+
+
+Role = Literal["financial", "supplier", "documents"]
+TaskKind = Literal["arithmetic", "duplicate", "supplier", "outlier", "unsupported", "documents"]
 ToolName = Literal[
     "get_invoice_snapshot",
     "get_rule_results",
     "find_duplicate_candidates",
     "get_supplier_policy",
     "get_supplier_history",
+    "get_supporting_documents",
 ]
 
 
@@ -92,7 +108,7 @@ class PlanTask(Contract):
 
 
 class InvestigationPlan(Contract):
-    tasks: Annotated[tuple[PlanTask, ...], Field(min_length=1, max_length=64)]
+    tasks: Annotated[tuple[PlanTask, ...], Field(min_length=1, max_length=65)]
 
 
 class ToolRequest(Contract):
@@ -117,6 +133,24 @@ class InvoiceSnapshot(Contract):
     currency: Annotated[str, Field(pattern=r"^[A-Z]{3}$")] | None
     blockers: Annotated[tuple[RuleEvidence, ...], Field(min_length=1, max_length=64)]
     lookup: LookupSnapshot | None = None
+    documents: DocumentSnapshot | None = None
+
+    @model_validator(mode="after")
+    def scoped_documents(self):
+        from app.modules.approvals.service import payload_hash
+
+        seen = set()
+        for source in self.documents.items if self.documents else ():
+            if (
+                source.invoice_id != self.invoice_id
+                or not self.lookup
+                or source.supplier_key != self.lookup.supplier_key
+                or source.source_id in seen
+                or source.content_sha256 != payload_hash({"text": source.text})
+            ):
+                raise ValueError("Invalid supporting document scope or integrity")
+            seen.add(source.source_id)
+        return self
 
 
 class Finding(Contract):
@@ -127,12 +161,12 @@ class Finding(Contract):
 
 
 class Findings(Contract):
-    items: Annotated[tuple[Finding, ...], Field(min_length=1, max_length=64)]
+    items: Annotated[tuple[Finding, ...], Field(min_length=1, max_length=65)]
 
 
 class InvestigationReport(Contract):
     summary: Text
-    findings: Annotated[tuple[Finding, ...], Field(min_length=1, max_length=64)]
+    findings: Annotated[tuple[Finding, ...], Field(min_length=1, max_length=65)]
     proposed_action: Action
     missing_evidence: Annotated[tuple[Text, ...], Field(max_length=64)]
     limitations: Annotated[tuple[Text, ...], Field(min_length=1, max_length=8)]

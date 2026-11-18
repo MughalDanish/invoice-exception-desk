@@ -120,7 +120,7 @@ def test_invalid_plan_rejected_before_any_tool_or_worker_runs(mutation, monkeypa
         )
 
 
-def test_dynamic_routing_respects_safe_plan_order_and_deduplicates_tools():
+def test_parallel_routing_accepts_safe_plan_order_and_deduplicates_tools():
     class Reordered(MockInvestigationProvider):
         def plan(self, s):
             return InvestigationPlan(tasks=tuple(reversed(mandatory_plan(s).tasks)))
@@ -135,7 +135,8 @@ def test_dynamic_routing_respects_safe_plan_order_and_deduplicates_tools():
         )
     )
     nodes = [next(iter(update)) for update in updates]
-    assert nodes.index("supplier") < nodes.index("financial")
+    assert nodes.index("supervisor") < min(nodes.index("supplier"), nodes.index("financial"))
+    assert max(nodes.index("supplier"), nodes.index("financial")) < nodes.index("advisory_report")
     report = updates[-1]["advisory_report"]["report"]
     assert len(report.findings) == 4
     assert len(report.tools_used) == 5 and len(set(report.tools_used)) == 5
@@ -278,7 +279,7 @@ def test_policy_change_during_graph_is_stale_before_publish(pg_client, pg_engine
     def change_policy(self, s, *args):
         with Session(pg_engine) as db:
             vendor = db.get(Vendor, s.lookup.policy.id)
-            vendor.is_approved = not vendor.is_approved
+            vendor.is_approved = False  # Idempotent even when parallel branches overlap.
             db.commit()
         return original(self, s, *args)
 

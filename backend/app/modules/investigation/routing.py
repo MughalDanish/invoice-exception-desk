@@ -27,6 +27,16 @@ def mandatory_plan(snapshot: InvoiceSnapshot) -> InvestigationPlan:
         tasks.append(
             PlanTask(task_id=str(rule.id), rule_id=rule.id, role=role, kind=kind, tools=tools)
         )
+    if snapshot.documents is not None:
+        tasks.append(
+            PlanTask(
+                task_id=f"documents:{snapshot.invoice_id}",
+                rule_id=snapshot.blockers[0].id,
+                role="documents",
+                kind="documents",
+                tools=("get_supporting_documents",),
+            )
+        )
     return InvestigationPlan(tasks=tuple(tasks))
 
 

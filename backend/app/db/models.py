@@ -250,3 +250,23 @@ class InvestigationRun(IdentityMixin, Base):
     report: Mapped[dict | None] = mapped_column(JSONB)
     error_code: Mapped[str | None] = mapped_column(String(80))
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class InvestigationDocument(Base):
+    """Versioned, append-only supporting evidence. No financial authority."""
+
+    __tablename__ = "investigation_documents"
+    __table_args__ = (
+        CheckConstraint("version >= 1", name="evidence_positive_version"),
+        CheckConstraint("kind IN ('PO', 'RECEIPT', 'EMAIL')", name="evidence_kind"),
+        CheckConstraint("length(content) BETWEEN 1 AND 1000", name="evidence_size"),
+        Index("ix_evidence_scope", "invoice_id", "supplier_key", "source_id", "version"),
+    )
+
+    source_id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True)
+    version: Mapped[int] = mapped_column(Integer, primary_key=True)
+    invoice_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("invoices.id"))
+    supplier_key: Mapped[str] = mapped_column(String(200))
+    kind: Mapped[str] = mapped_column(String(10))
+    content: Mapped[str] = mapped_column(Text)
+    content_sha256: Mapped[str] = mapped_column(String(64))

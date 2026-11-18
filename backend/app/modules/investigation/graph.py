@@ -1,4 +1,4 @@
-"""Day 7: validated supervisor plan and sequential, dynamically routed workers."""
+"""Day 8: bounded parallel workers over a frozen read set, followed by an explicit join."""
 
 from typing import Annotated, TypedDict
 from uuid import UUID
@@ -6,7 +6,7 @@ from uuid import UUID
 from langgraph.graph import END, START, StateGraph
 
 from app.modules.approvals.service import payload_hash
-from app.modules.investigation.providers import InvestigationProvider, expected_finding
+from app.modules.investigation.providers import InvestigationProvider, expected_task_finding
 from app.modules.investigation.routing import validate_plan
 from app.modules.investigation.schemas import (
     Finding,
@@ -26,7 +26,7 @@ def merge_findings(left: dict[str, Finding], right: dict[str, Finding]) -> dict[
         if key != finding.task_id or (key in merged and merged[key] != finding):
             raise ValueError("Conflicting investigation finding")
         merged[key] = finding
-    if len(merged) > 64:
+    if len(merged) > 65:
         raise ValueError("Too many investigation findings")
     return dict(sorted(merged.items()))
 
@@ -37,7 +37,6 @@ class InvestigationState(TypedDict):
     findings: Annotated[dict[str, Finding], merge_findings]
     report: InvestigationReport
     plan: InvestigationPlan
-    completed_roles: tuple[str, ...]
     tool_results: dict[str, ToolResult]
 
 
@@ -51,48 +50,39 @@ def build_graph(provider: InvestigationProvider):
         if not hasattr(provider, "plan"):
             raise ValueError("Investigation provider must supply a plan")
         plan = validate_plan(state["snapshot"], provider.plan(state["snapshot"]))
-        return {"plan": plan, "completed_roles": (), "tool_results": {}}
-
-    def dispatch(state: InvestigationState):
-        return {}
-
-    def next_role(state: InvestigationState):
-        for task in state["plan"].tasks:
-            if task.role not in state["completed_roles"]:
-                return task.role
-        return "report"
+        # Execute each allowlisted tool once before fan-out. Workers share no mutable
+        # cache or SQLAlchemy Session; immutable ToolResults are safe to read concurrently.
+        snapshot = state["snapshot"]
+        box = ReadOnlyTools(snapshot)
+        names = sorted({name for task in plan.tasks for name in task.tools})
+        if len(names) > 12:
+            raise ValueError("Investigation tool budget exceeded")
+        cache = {
+            name: box.call(
+                ToolRequest(
+                    name=name,
+                    invoice_id=snapshot.invoice_id,
+                    supplier_key=snapshot.lookup.supplier_key if snapshot.lookup else "",
+                )
+            )
+            for name in names
+        }
+        return {"plan": plan, "tool_results": cache}
 
     def worker(role):
         def execute(state: InvestigationState):
             s = state["snapshot"]
-            cache = dict(state["tool_results"])
+            cache = state["tool_results"]
             findings = {}
-            box = ReadOnlyTools(s)
             for task in state["plan"].tasks:
                 if task.role != role:
                     continue
-                for name in task.tools:
-                    if name not in cache:
-                        if len(cache) >= 12:
-                            raise ValueError("Investigation tool budget exceeded")
-                        cache[name] = box.call(
-                            ToolRequest(
-                                name=name,
-                                invoice_id=s.invoice_id,
-                                supplier_key=s.lookup.supplier_key if s.lookup else "",
-                            )
-                        )
                 evidence = tuple(cache[name] for name in task.tools)
                 finding = Finding.model_validate(provider.investigate(s, task, evidence))
-                rule = next(r for r in s.blockers if r.id == task.rule_id)
-                if finding != expected_finding(s, rule, evidence):
+                if finding != expected_task_finding(s, task, evidence):
                     raise ValueError("Unsupported investigation output")
                 findings[task.task_id] = finding
-            return {
-                "findings": findings,
-                "tool_results": cache,
-                "completed_roles": state["completed_roles"] + (role,),
-            }
+            return {"findings": findings}
 
         return execute
 
@@ -100,16 +90,22 @@ def build_graph(provider: InvestigationProvider):
         snapshot = state["snapshot"]
         # The minimal provider has one allowlisted output per blocker. Unknown citations,
         # altered numeric claims, omissions and unsupported actions never reach storage.
-        expected = {str(r.id): expected_finding(snapshot, r) for r in snapshot.blockers}
+        expected = {
+            task.task_id: expected_task_finding(
+                snapshot, task, tuple(state["tool_results"][name] for name in task.tools)
+            )
+            for task in state["plan"].tasks
+        }
         if state["findings"] != expected:
             raise ValueError("Unsupported investigation output")
         findings = tuple(state["findings"].values())
         result = InvestigationReport(
-            summary="Mock supervisor investigation of current validation exceptions.",
+            summary="Mock parallel investigation of validation exceptions and supporting evidence.",
             findings=findings,
             proposed_action="REQUEST_EVIDENCE",
             missing_evidence=(
-                "Human verification of the original document; no document was read by this graph.",
+                "Human verification of the original document; supporting texts are not reconciled.",
+                *document_gaps(snapshot),
             ),
             limitations=(
                 "Scripted mock output, not live AI reasoning or proof of authenticity.",
@@ -131,24 +127,33 @@ def build_graph(provider: InvestigationProvider):
         StateGraph(InvestigationState)
         .add_node("capture_snapshot", capture)
         .add_node("supervisor", supervise)
-        .add_node("dispatch", dispatch)
         .add_node("financial", worker("financial"))
         .add_node("supplier", worker("supplier"))
+        .add_node("documents", worker("documents"))
         .add_node("advisory_report", report)
         .add_edge(START, "capture_snapshot")
         .add_edge("capture_snapshot", "supervisor")
-        .add_edge("supervisor", "dispatch")
-        .add_conditional_edges(
-            "dispatch",
-            next_role,
-            {
-                "financial": "financial",
-                "supplier": "supplier",
-                "report": "advisory_report",
-            },
-        )
-        .add_edge("financial", "dispatch")
-        .add_edge("supplier", "dispatch")
+        .add_edge("supervisor", "financial")
+        .add_edge("supervisor", "supplier")
+        .add_edge("supervisor", "documents")
+        # All three nodes run, even when a role has no work. This explicit AND join
+        # cannot publish an incomplete report or deadlock on an unselected branch.
+        .add_edge(["financial", "supplier", "documents"], "advisory_report")
         .add_edge("advisory_report", END)
         .compile()
+    )
+
+
+def document_gaps(snapshot):
+    if snapshot.documents is None:
+        return ()
+    kinds = {d.kind for d in snapshot.documents.items}
+    gaps = tuple(
+        f"No {kind} in bounded supporting evidence capture."
+        for kind in sorted({"PO", "RECEIPT", "EMAIL"} - kinds)
+    )
+    return gaps + (
+        ("Supporting evidence capture is truncated; more sources may exist.",)
+        if snapshot.documents.truncated
+        else ()
     )

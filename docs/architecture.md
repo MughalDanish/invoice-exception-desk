@@ -258,3 +258,25 @@ new dependency, financial-schema change, public route or frontend integration is
 introduced. LangGraph/provider tracing stays disabled and investigation mode is
 still scripted mock. Parallel execution and a synthetic PO/receipt/email corpus
 remain Day 8; advanced retrieval remains Day 9.
+
+
+## Phase 2 Day 8: parallel investigators and versioned evidence
+
+The Day 7 sequential dispatch loop is superseded by three parallel role nodes and
+an explicit AND join. Mandatory blocker routes remain enforced; new snapshots also
+require a document inventory task. Empty role nodes are no-ops. Findings merge by
+stable task ID with conflict rejection and deterministic ordering. Tools are
+captured once before fan-out, so no Session or mutable cache is shared by workers.
+
+Migration `0007_investigation_documents` adds only supporting evidence. Source UUID
+and positive version form its primary key. UPDATE/DELETE triggers retain history.
+Capture filters by invoice UUID AND normalized supplier, selects the latest source
+versions, and bounds the read set to 12 with explicit truncation. Immutable snapshot
+validation checks identities and content digests. Source changes in the visible read
+set stale reports on finalization/GET. Earlier snapshots retain their original semantics.
+
+The mock document investigator inventories kinds and always requests human review;
+it does not infer financial truth from document text. No ingestion API, real email
+import, hybrid search, live model, UI change, approval or posting capability was added.
+The synthetic corpus is loaded only in a disposable demo schema. See Day 8 progress
+and learning notes for commands, actual results and limitations. Day 9 remains gated.

@@ -54,7 +54,12 @@ Unknown blockers and missing evidence remain explicit limitations.
 See [Day 6 learning guide](docs/learning-day-6.md) and
 [milestone results](docs/day-6-progress.md). Current results and concepts are in the
 [Day 7 report](docs/day-7-progress.md) and [learning guide](docs/learning-day-7.md).
-Day 8 requires separate confirmation.
+Day 8 adds parallel financial/supplier/document branches with an explicit join,
+a versioned append-only supporting-evidence table, scoped bounded capture and a
+synthetic PO/receipt/email corpus. The document branch inventories missing evidence;
+it does not reconcile text or grant financial authority. See the
+[Day 8 report](docs/day-8-progress.md) and [learning guide](docs/learning-day-8.md).
+Day 9 requires separate confirmation.
 
 Run the isolated synthetic example (existing local PostgreSQL must be running):
 
@@ -62,6 +67,7 @@ Run the isolated synthetic example (existing local PostgreSQL must be running):
 .venv/Scripts/python.exe -m pip install -r backend/requirements.txt
 .venv/Scripts/python.exe scripts/run_investigation_demo.py
 .venv/Scripts/python.exe scripts/run_routing_demo.py
+.venv/Scripts/python.exe scripts/run_parallel_demo.py
 ```
 
 The example creates and removes its own schema and writes only a synthetic report
@@ -399,9 +405,10 @@ that disagree with the document; approval records a human decision, not authenti
 ## Limits
 
 Synthetic demonstration only. No cloud/public deployment has been performed.
-The public-mode configuration is read-only; Basic auth is for the private local
-operator. Integration intake instead requires
-`X-Integration-Key` and `Idempotency-Key`; all operator routes retain Basic auth.
+The public-mode configuration is read-only. Private operators use Argon2id-backed
+login with HttpOnly JWT cookies, PostgreSQL sessions, refresh rotation and CSRF
+protection. Integration intake instead requires `X-Integration-Key` and
+`Idempotency-Key`; those keys do not grant operator access.
 Windows filesystem permissions
 inherit from the local account; POSIX modes also restrict files in Linux containers.
 Normal DB failures clean up new files; crash recovery for orphaned files is pending.

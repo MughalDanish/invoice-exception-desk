@@ -264,15 +264,17 @@ def test_failure_is_sanitized_and_replay_does_not_retry(pg_client, pg_engine, mo
     calls = []
 
     def fail(*args):
-        calls.append(1)
+        calls.append(args[2].task_id)
         raise RuntimeError("secret invoice text MUST_NOT_LOG")
 
     monkeypatch.setattr(MockInvestigationProvider, "investigate", fail)
     result = investigate(pg_client, identifier).json()
     assert result["status"] == "FAILED" and result["error_code"] == "INVESTIGATION_FAILED"
     assert result["report"] is None
+    attempts = tuple(calls)
     assert investigate(pg_client, identifier).json() == result
-    assert len(calls) == 1
+    assert tuple(calls) == attempts
+    assert 1 <= len(calls) <= 2 and len(calls) == len(set(calls))
     assert "MUST_NOT_LOG" not in caplog.text + json.dumps(result)
     assert financial_state(pg_engine) == before
 
