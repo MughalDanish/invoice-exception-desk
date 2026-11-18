@@ -12,6 +12,7 @@ from app.core.errors import AppError
 from app.db.models import InvestigationRun, Invoice, InvoiceStatus, Severity, ValidationResult
 from app.modules.approvals.service import payload_hash
 from app.modules.investigation.graph import build_graph
+from app.modules.investigation.lookups import capture_lookups
 from app.modules.investigation.providers import MockInvestigationProvider
 from app.modules.investigation.schemas import (
     InvestigationReport,
@@ -71,6 +72,7 @@ def snapshot_invoice(session, invoice) -> InvoiceSnapshot:
         payload_sha256=payload_hash(invoice.current_data),
         validation_batch_id=invoice.validation_run_id,
         document_sha256=invoice.sha256,
+        lookup=capture_lookups(session, invoice),
         currency=currency,
         blockers=tuple(
             RuleEvidence(
@@ -88,7 +90,7 @@ def snapshot_invoice(session, invoice) -> InvoiceSnapshot:
     )
 
 
-def matches(invoice, run) -> bool:
+def matches(invoice, run, session) -> bool:
     return (
         invoice is not None
         and invoice.status == InvoiceStatus.NEEDS_REVIEW
@@ -96,11 +98,16 @@ def matches(invoice, run) -> bool:
         and invoice.validation_run_id == run.validation_batch_id
         and payload_hash(invoice.current_data) == run.payload_sha256
         and invoice.sha256 == run.snapshot["document_sha256"]
+        and (
+            "lookup" not in run.snapshot
+            or run.snapshot["lookup"] is None
+            or capture_lookups(session, invoice).model_dump(mode="json") == run.snapshot["lookup"]
+        )
     )
 
 
-def view(run, invoice) -> InvestigationView:
-    current = matches(invoice, run)
+def view(run, invoice, session) -> InvestigationView:
+    current = matches(invoice, run, session)
     status = "STALE" if not current else run.status
     applicable = current and status == "COMPLETED"
     return InvestigationView(
@@ -127,13 +134,15 @@ def start_investigation(session, invoice_id: uuid.UUID, body: InvestigationReque
             )
         )
         if existing:
-            if existing.revision != body.expected_revision or not matches(invoice, existing):
+            if existing.revision != body.expected_revision or not matches(
+                invoice, existing, session
+            ):
                 raise AppError(
                     409,
                     "INVESTIGATION_KEY_CONFLICT",
                     "Request key belongs to a different invoice snapshot",
                 )
-            return view(existing, invoice)
+            return view(existing, invoice, session)
         if invoice.revision != body.expected_revision:
             raise AppError(409, "STALE_REVISION", "Invoice changed; reload before investigation")
         snapshot = snapshot_invoice(session, invoice)
@@ -146,8 +155,8 @@ def start_investigation(session, invoice_id: uuid.UUID, body: InvestigationReque
             idempotency_key=body.idempotency_key,
             status="RUNNING",
             mode="mock",
-            provider_version="scripted-total-v1",
-            policy_version="day-6-v1",
+            provider_version="scripted-supervisor-v2",
+            policy_version="day-7-v1",
             requested_by=actor,
             snapshot=snapshot.model_dump(mode="json"),
         )
@@ -163,7 +172,7 @@ def start_investigation(session, invoice_id: uuid.UUID, body: InvestigationReque
         with tracing_context(enabled=False):
             result = build_graph(MockInvestigationProvider()).invoke(
                 {"run_id": run_id, "snapshot": snapshot, "findings": {}},
-                config={"recursion_limit": 5, "callbacks": []},
+                config={"recursion_limit": 12, "callbacks": []},
             )
         report = InvestigationReport.model_validate(result["report"])
     except Exception:
@@ -173,7 +182,7 @@ def start_investigation(session, invoice_id: uuid.UUID, body: InvestigationReque
         invoice = locked_invoice(session, invoice_id)
         run = session.get(InvestigationRun, run_id)
         run.finished_at = datetime.now(UTC)
-        if not matches(invoice, run):
+        if not matches(invoice, run, session):
             run.status = "STALE"
         elif error_code:
             run.status = "FAILED"
@@ -182,7 +191,7 @@ def start_investigation(session, invoice_id: uuid.UUID, body: InvestigationReque
             run.status = "COMPLETED"
             run.report = report.model_dump(mode="json")
         session.flush()
-        return view(run, invoice)
+        return view(run, invoice, session)
 
 
 def get_investigation(session, run_id: uuid.UUID):
@@ -190,4 +199,4 @@ def get_investigation(session, run_id: uuid.UUID):
     if run is None:
         raise AppError(404, "INVESTIGATION_NOT_FOUND", "Investigation not found")
     # Fresh applicability on every read; immutable historical report stays in storage.
-    return view(run, session.get(Invoice, run.invoice_id))
+    return view(run, session.get(Invoice, run.invoice_id), session)

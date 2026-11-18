@@ -227,3 +227,34 @@ package does not enable tracing: execution explicitly disables it, even if host
 tracing environment variables are present. No Gemini extraction changes are needed.
 Interrupted RUNNING records have no recovery yet; durable checkpointing and workers
 remain Day 12. UI integration is Day 14. See the Day 6 report and learning guide.
+
+## Phase 2 Day 7: validated supervisor and scoped tools
+
+The investigation module now adds a mock supervisor and conditional dispatch loop.
+`routing.py` derives required tasks from blocker codes; the proposed plan can
+reorder tasks but cannot omit checks, change ownership or introduce tools.
+`graph.py` executes financial and supplier roles sequentially, merges by stable
+rule/task IDs and checks every finding against captured evidence. The report still
+requests evidence; it cannot approve, correct or post anything.
+
+`lookups.py` captures bounded exact SQL evidence under server-derived invoice and
+normalized supplier identity. It filters duplicates by supplier plus invoice number
+and history by supplier plus currency. `tools.py` exposes five explicit operations
+over that frozen projection, with strict schemas and scope checks. Neither provider
+nor tool receives a Session, arbitrary SQL, filesystem path or network client.
+Distinct reads are cached per run and bounded to 12 calls (five currently available).
+
+Snapshots now optionally include supplier policy, up to 20 active duplicate
+candidates, up to 20 matching ledger facts and up to 20 recent same-currency ledger
+facts. Truncation is explicit. Finalization and GET compare this evidence as well as
+the original revision/hash/batch/source guards. Capturing the whole small read set
+is intentionally conservative: changes to even an unused captured source may stale
+a report. These checks are advisory freshness safeguards, not transactionally
+serializable financial authority; the existing posting transaction remains separate.
+
+Plans, used tool names and a lookup digest are additive report fields. Day 6 records
+without them remain readable, with their original evidence semantics. No migration,
+new dependency, financial-schema change, public route or frontend integration is
+introduced. LangGraph/provider tracing stays disabled and investigation mode is
+still scripted mock. Parallel execution and a synthetic PO/receipt/email corpus
+remain Day 8; advanced retrieval remains Day 9.

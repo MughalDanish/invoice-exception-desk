@@ -39,6 +39,75 @@ class RuleEvidence(Contract):
     observed_amount: Amount | None = None
 
 
+class SupplierPolicy(Contract):
+    id: UUID
+    approved: bool
+    currency: str | None
+    amount_limit: Amount | None
+
+
+class DuplicateCandidate(Contract):
+    id: UUID
+    revision: Annotated[int, Field(ge=1)]
+    status: str
+    payload_hash: Digest
+
+
+class LedgerFact(Contract):
+    id: UUID
+    currency: str
+    total: Amount
+
+
+class LookupSnapshot(Contract):
+    supplier_key: Annotated[str, Field(max_length=200)]
+    invoice_key: Annotated[str, Field(max_length=200)]
+    invoice_total: Amount | None
+    policy: SupplierPolicy | None
+    duplicates: Annotated[tuple[DuplicateCandidate, ...], Field(max_length=20)] = ()
+    ledger_matches: Annotated[tuple[LedgerFact, ...], Field(max_length=20)] = ()
+    history: Annotated[tuple[LedgerFact, ...], Field(max_length=20)] = ()
+    duplicates_truncated: bool = False
+    ledger_matches_truncated: bool = False
+    history_truncated: bool = False
+
+
+Role = Literal["financial", "supplier"]
+TaskKind = Literal["arithmetic", "duplicate", "supplier", "outlier", "unsupported"]
+ToolName = Literal[
+    "get_invoice_snapshot",
+    "get_rule_results",
+    "find_duplicate_candidates",
+    "get_supplier_policy",
+    "get_supplier_history",
+]
+
+
+class PlanTask(Contract):
+    task_id: Annotated[str, Field(min_length=1, max_length=100)]
+    rule_id: UUID
+    role: Role
+    kind: TaskKind
+    tools: Annotated[tuple[ToolName, ...], Field(min_length=1, max_length=3)]
+
+
+class InvestigationPlan(Contract):
+    tasks: Annotated[tuple[PlanTask, ...], Field(min_length=1, max_length=64)]
+
+
+class ToolRequest(Contract):
+    name: ToolName
+    invoice_id: UUID
+    supplier_key: Annotated[str, Field(max_length=200)]
+
+
+class ToolResult(Contract):
+    name: ToolName
+    evidence_id: Annotated[str, Field(min_length=1, max_length=180)]
+    status: Literal["FOUND", "MISSING", "NOT_READ"]
+    facts: Annotated[tuple[Text, ...], Field(min_length=1, max_length=4)]
+
+
 class InvoiceSnapshot(Contract):
     invoice_id: UUID
     revision: Annotated[int, Field(ge=1)]
@@ -47,6 +116,7 @@ class InvoiceSnapshot(Contract):
     document_sha256: Digest
     currency: Annotated[str, Field(pattern=r"^[A-Z]{3}$")] | None
     blockers: Annotated[tuple[RuleEvidence, ...], Field(min_length=1, max_length=64)]
+    lookup: LookupSnapshot | None = None
 
 
 class Finding(Contract):
@@ -71,6 +141,9 @@ class InvestigationReport(Contract):
     source_validation_batch: UUID
     mode: Literal["mock"] = "mock"
     advisory_only: Literal[True] = True
+    plan: InvestigationPlan | None = None
+    tools_used: Annotated[tuple[ToolName, ...], Field(max_length=12)] = ()
+    lookup_digest: Digest | None = None
 
 
 class InvestigationRequest(Contract):

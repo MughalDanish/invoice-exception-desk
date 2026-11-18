@@ -47,16 +47,21 @@ does not run live model calls or send notifications.
 The Phase 2 documents are preserved in [docs/phase-2](docs/phase-2/AI_UPGRADE_START_HERE.md).
 Day 6 adds an advisory-only LangGraph mock investigation with strict typed contracts,
 snapshot-bound reports, an additive migration and operator-authenticated API routes.
-It explains recorded total-mismatch evidence without reading documents or changing
-financial records. Other blockers explicitly remain insufficiently investigated.
+Day 7 extends it with a validated mock supervisor, sequential financial/supplier
+roles and five scoped read-only tools for totals, duplicates, supplier approval and
+amount outliers. It describes captured evidence without changing financial records.
+Unknown blockers and missing evidence remain explicit limitations.
 See [Day 6 learning guide](docs/learning-day-6.md) and
-[milestone results](docs/day-6-progress.md). Day 7 requires separate confirmation.
+[milestone results](docs/day-6-progress.md). Current results and concepts are in the
+[Day 7 report](docs/day-7-progress.md) and [learning guide](docs/learning-day-7.md).
+Day 8 requires separate confirmation.
 
 Run the isolated synthetic example (existing local PostgreSQL must be running):
 
 ```powershell
 .venv/Scripts/python.exe -m pip install -r backend/requirements.txt
 .venv/Scripts/python.exe scripts/run_investigation_demo.py
+.venv/Scripts/python.exe scripts/run_routing_demo.py
 ```
 
 The example creates and removes its own schema and writes only a synthetic report
@@ -70,7 +75,8 @@ docker compose run --rm --no-deps backend python -m alembic upgrade head
 docker compose up -d --no-build --no-deps backend
 ```
 
-This milestone has no investigation screen, supervisor, retrieval or durable worker.
+The routing demo writes four synthetic reports to `storage/day-7-synthetic-reports.json`.
+This milestone has no investigation screen, parallel workers, retrieval corpus or durable worker.
 Existing invoice controls and n8n intake remain independent of investigations.
 
 ## Day 5 results and public preview

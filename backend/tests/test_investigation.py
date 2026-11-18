@@ -63,7 +63,7 @@ def test_real_graph_is_offline_and_preserves_exact_recorded_amounts(monkeypatch)
     s = snapshot()
     result = build_graph(MockInvestigationProvider()).invoke(
         {"run_id": uuid.uuid4(), "snapshot": s, "findings": {}},
-        config={"recursion_limit": 5},
+        config={"recursion_limit": 12},
     )
     report = result["report"]
     assert "2300.0000 USD" in report.findings[0].claim
@@ -122,26 +122,20 @@ def test_reducer_is_deterministic_idempotent_and_rejects_conflicting_ids():
 
 @pytest.mark.parametrize("kind", ["amount", "citation", "omission", "duplicate"])
 def test_graph_rejects_unsupported_or_omitted_claims(kind):
-    class BadProvider:
-        def investigate(self, s):
+    class BadProvider(MockInvestigationProvider):
+        def investigate(self, s, *args):
             good = MockInvestigationProvider().investigate(s).items[0]
             if kind == "amount":
-                return Findings(items=(good.model_copy(update={"claim": "Expected 1 USD"}),))
+                return good.model_copy(update={"claim": "Expected 1 USD"})
             if kind == "citation":
-                return Findings(
-                    items=(good.model_copy(update={"evidence_ids": ("validation:other",)}),)
-                )
+                return good.model_copy(update={"evidence_ids": ("validation:other",)})
             if kind == "duplicate":
                 return Findings(items=(good, good))
-            return Findings(
-                items=(
-                    Finding(
-                        task_id="omitted",
-                        claim="No issue",
-                        evidence_ids=("invented",),
-                        status="SUPPORTED",
-                    ),
-                )
+            return Finding(
+                task_id="omitted",
+                claim="No issue",
+                evidence_ids=("invented",),
+                status="SUPPORTED",
             )
 
     with pytest.raises(ValueError):
@@ -290,14 +284,14 @@ def test_change_while_graph_runs_cannot_publish_applicable_report(
     identifier = prepared(pg_client, pg_engine)
     original = MockInvestigationProvider.investigate
 
-    def racing(self, s):
+    def racing(self, s, *args):
         with Session(pg_engine) as db:
             # Independent transaction succeeds: graph holds no invoice lock/DB transaction.
             db.execute(text("SET LOCAL lock_timeout = '1000ms'"))
             invoice = db.get(Invoice, s.invoice_id)
             invoice.validation_run_id = uuid.uuid4()
             db.commit()
-        return original(self, s)
+        return original(self, s, *args)
 
     monkeypatch.setattr(MockInvestigationProvider, "investigate", racing)
     result = investigate(pg_client, identifier).json()
