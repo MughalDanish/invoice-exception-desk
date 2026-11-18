@@ -8,7 +8,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
 
-from app.qa import checked, detail, isolated_client, process, upload
+from app.qa import (
+    checked,
+    complete_synthetic_investigation,
+    detail,
+    isolated_client,
+    process,
+    upload,
+)
 from dotenv import dotenv_values
 from sqlalchemy.engine import make_url
 
@@ -32,6 +39,7 @@ def main():
             ),
             (202,),
         )
+        report = complete_synthetic_investigation(client, report)
         if report["status"] != "COMPLETED" or detail(client, identifier) != before:
             raise RuntimeError("Investigation did not complete safely")
         if checked(client.get("/api/v1/ledger"))["total"] != 0:

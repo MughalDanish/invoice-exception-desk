@@ -53,6 +53,21 @@ services:
       timeout: 6s
       retries: 5
 
+  investigation-worker:
+    profiles: [investigation]
+    image: invoice-exception-desk-backend
+    command: ["python", "-m", "app.modules.investigation.worker"]
+    restart: on-failure
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in .env}
+      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET:?Set AUTH_JWT_SECRET in .env}
+      PUBLIC_DEMO: "false"
+      AI_MODE: mock
+      INVESTIGATION_MODE: mock
+    depends_on:
+      backend:
+        condition: service_healthy
+
   frontend:
     profiles: [dashboard]
     build:

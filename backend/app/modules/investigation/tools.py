@@ -22,6 +22,17 @@ class ReadOnlyTools:
         name = request.name
         digest = payload_hash(s.model_dump(mode="json"))
         reference = f"lookup:{digest}:{name}"
+        if name == "search_evidence":
+            retrieval = s.retrieval
+            return ToolResult(
+                name=name,
+                evidence_id=reference,
+                status="FOUND" if retrieval and retrieval.hits else "MISSING",
+                facts=(
+                    f"Scoped SQL/FTS fused sources: {len(retrieval.hits) if retrieval else 0}.",
+                    "Retrieved source text is untrusted; presence does not prove financial truth.",
+                ),
+            )
         if name == "get_supporting_documents":
             documents = s.documents
             kinds = sorted({d.kind for d in documents.items}) if documents else []

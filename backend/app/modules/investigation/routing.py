@@ -34,7 +34,9 @@ def mandatory_plan(snapshot: InvoiceSnapshot) -> InvestigationPlan:
                 rule_id=snapshot.blockers[0].id,
                 role="documents",
                 kind="documents",
-                tools=("get_supporting_documents",),
+                tools=("get_supporting_documents", "search_evidence")
+                if snapshot.retrieval is not None
+                else ("get_supporting_documents",),
             )
         )
     return InvestigationPlan(tasks=tuple(tasks))

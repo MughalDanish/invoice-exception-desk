@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "synthetic": true,
+  "purpose": "Small development retrieval diagnostic, not a held-out model-quality benchmark",
+  "cases": [
+    {"name": "amendment", "query": "purchase amendment", "documents": [
+      {"key": "po", "kind": "PO", "text": "{invoice} purchase amendment changes the delivery schedule only.", "relevant": true},
+      {"key": "email", "kind": "EMAIL", "text": "Purchase amendment requires signed supporting documentation.", "relevant": true},
+      {"key": "noise", "kind": "EMAIL", "text": "{invoice} holiday office closure notice.", "relevant": false}
+    ]},
+    {"name": "receipt", "query": "receipt delivery", "documents": [
+      {"key": "receipt", "kind": "RECEIPT", "text": "{invoice} delivery receipt records partial delivery.", "relevant": true},
+      {"key": "email", "kind": "EMAIL", "text": "Delivery receipt is pending warehouse confirmation.", "relevant": true},
+      {"key": "noise", "kind": "PO", "text": "{invoice} office stationery catalog.", "relevant": false}
+    ]},
+    {"name": "supplier", "query": "supplier verification", "documents": [
+      {"key": "email", "kind": "EMAIL", "text": "{invoice} supplier verification documents have been requested.", "relevant": true},
+      {"key": "po", "kind": "PO", "text": "Supplier verification remains incomplete; this text cannot approve a supplier.", "relevant": true},
+      {"key": "noise", "kind": "RECEIPT", "text": "{invoice} package color is blue.", "relevant": false}
+    ]}
+  ]
+}

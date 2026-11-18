@@ -121,14 +121,15 @@ def expected_task_finding(snapshot, task, evidence=None) -> Finding:
         rule = next(r for r in snapshot.blockers if r.id == task.rule_id)
         return expected_finding(snapshot, rule, evidence)
     if evidence is None:
-        evidence = (
+        evidence = tuple(
             ReadOnlyTools(snapshot).call(
                 ToolRequest(
-                    name="get_supporting_documents",
+                    name=name,
                     invoice_id=snapshot.invoice_id,
                     supplier_key=snapshot.lookup.supplier_key if snapshot.lookup else "",
                 )
-            ),
+            )
+            for name in task.tools
         )
     if tuple(r.name for r in evidence) != task.tools:
         raise ValueError("Required document evidence missing")
@@ -137,6 +138,7 @@ def expected_task_finding(snapshot, task, evidence=None) -> Finding:
         task_id=task.task_id,
         claim=" ".join(evidence[0].facts)
         + " Contents have not been reconciled; human review required.",
-        evidence_ids=(evidence[0].evidence_id,),
+        evidence_ids=tuple(e.evidence_id for e in evidence)
+        + tuple(c.citation_id for c in (snapshot.retrieval.hits[:2] if snapshot.retrieval else ())),
         status="INSUFFICIENT",
     )

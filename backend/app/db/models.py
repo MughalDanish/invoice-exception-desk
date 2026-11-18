@@ -229,11 +229,12 @@ class InvestigationRun(IdentityMixin, Base):
         UniqueConstraint("invoice_id", "idempotency_key", name="uq_investigation_request"),
         CheckConstraint("revision >= 1", name="investigation_positive_revision"),
         CheckConstraint(
-            "status IN ('RUNNING', 'COMPLETED', 'FAILED', 'STALE')",
+            "status IN ('QUEUED', 'RUNNING', 'COMPLETED', 'FAILED', 'CANCELLED', 'STALE')",
             name="investigation_status",
         ),
         CheckConstraint("mode = 'mock'", name="investigation_mock_only"),
         Index("ix_investigation_invoice_created", "invoice_id", "created_at"),
+        Index("ix_investigation_queue", "status", "available_at", "lease_until"),
     )
 
     invoice_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("invoices.id"))
@@ -250,6 +251,34 @@ class InvestigationRun(IdentityMixin, Base):
     report: Mapped[dict | None] = mapped_column(JSONB)
     error_code: Mapped[str | None] = mapped_column(String(80))
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    lease_owner: Mapped[str | None] = mapped_column(String(100))
+    lease_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    fence: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    attempts: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    available_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    cancel_requested: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default=text("false")
+    )
+    event_seq: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+
+
+class InvestigationEvent(IdentityMixin, Base):
+    __tablename__ = "investigation_events"
+    __table_args__ = (UniqueConstraint("run_id", "seq", name="uq_investigation_event_seq"),)
+    run_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("investigation_runs.id"), index=True)
+    seq: Mapped[int] = mapped_column(Integer)
+    event_type: Mapped[str] = mapped_column(String(40))
+    details: Mapped[dict] = mapped_column(JSONB, default=dict)
+
+
+class InvestigationToolResult(IdentityMixin, Base):
+    __tablename__ = "investigation_tool_results"
+    __table_args__ = (UniqueConstraint("run_id", "tool_name", name="uq_investigation_tool"),)
+    run_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("investigation_runs.id"), index=True)
+    tool_name: Mapped[str] = mapped_column(String(80))
+    result: Mapped[dict] = mapped_column(JSONB)
 
 
 class InvestigationDocument(Base):
@@ -261,6 +290,11 @@ class InvestigationDocument(Base):
         CheckConstraint("kind IN ('PO', 'RECEIPT', 'EMAIL')", name="evidence_kind"),
         CheckConstraint("length(content) BETWEEN 1 AND 1000", name="evidence_size"),
         Index("ix_evidence_scope", "invoice_id", "supplier_key", "source_id", "version"),
+        Index(
+            "ix_evidence_fts",
+            text("to_tsvector('english'::regconfig, content)"),
+            postgresql_using="gin",
+        ),
     )
 
     source_id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True)

@@ -197,5 +197,5 @@ def test_migration_downgrade_and_upgrade(pg_engine):
         command.upgrade(config, "head")
         assert (
             connection.scalar(text("SELECT version_num FROM alembic_version"))
-            == "0007_investigation_documents"
+            == "0009_durable_investigation"
         )

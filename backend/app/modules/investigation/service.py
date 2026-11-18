@@ -3,18 +3,16 @@
 import json
 import re
 import uuid
-from datetime import UTC, datetime
 
-from langsmith import tracing_context
 from sqlalchemy import select
 
 from app.core.errors import AppError
 from app.db.models import InvestigationRun, Invoice, InvoiceStatus, Severity, ValidationResult
 from app.modules.approvals.service import payload_hash
+from app.modules.evidence.search import capture_retrieval
 from app.modules.investigation.documents import capture_documents
-from app.modules.investigation.graph import build_graph
 from app.modules.investigation.lookups import capture_lookups
-from app.modules.investigation.providers import MockInvestigationProvider
+from app.modules.investigation.queue import event
 from app.modules.investigation.schemas import (
     InvestigationReport,
     InvestigationRequest,
@@ -75,6 +73,7 @@ def snapshot_invoice(session, invoice) -> InvoiceSnapshot:
         document_sha256=invoice.sha256,
         lookup=capture_lookups(session, invoice),
         documents=capture_documents(session, invoice),
+        retrieval=capture_retrieval(session, invoice),
         currency=currency,
         blockers=tuple(
             RuleEvidence(
@@ -101,6 +100,11 @@ def matches(invoice, run, session) -> bool:
         and payload_hash(invoice.current_data) == run.payload_sha256
         and invoice.sha256 == run.snapshot["document_sha256"]
         and (
+            run.snapshot.get("retrieval") is None
+            or capture_retrieval(session, invoice).model_dump(mode="json")
+            == run.snapshot["retrieval"]
+        )
+        and (
             run.snapshot.get("documents") is None
             or capture_documents(session, invoice).model_dump(mode="json")
             == run.snapshot["documents"]
@@ -115,7 +119,7 @@ def matches(invoice, run, session) -> bool:
 
 def view(run, invoice, session) -> InvestigationView:
     current = matches(invoice, run, session)
-    status = "STALE" if not current else run.status
+    status = "STALE" if not current and run.status != "CANCELLED" else run.status
     applicable = current and status == "COMPLETED"
     return InvestigationView(
         run_id=run.id,
@@ -128,6 +132,9 @@ def view(run, invoice, session) -> InvestigationView:
         if applicable and run.report
         else None,
         error_code=run.error_code,
+        execution="durable_worker"
+        if run.provider_version == "scripted-durable-v4"
+        else "synchronous_local",
     )
 
 
@@ -160,43 +167,16 @@ def start_investigation(session, invoice_id: uuid.UUID, body: InvestigationReque
             payload_sha256=snapshot.payload_sha256,
             validation_batch_id=snapshot.validation_batch_id,
             idempotency_key=body.idempotency_key,
-            status="RUNNING",
+            status="QUEUED",
             mode="mock",
-            provider_version="scripted-parallel-v3",
-            policy_version="day-8-v1",
+            provider_version="scripted-durable-v4",
+            policy_version="days-9-12-v1",
             requested_by=actor,
             snapshot=snapshot.model_dump(mode="json"),
         )
         session.add(run)
         session.flush()
-        run_id = run.id
-    # Only frozen data enters the graph. No session/ORM object or financial tools.
-    report = None
-    error_code = None
-    try:
-        # LangSmith is a transitive dependency, not consent to transmit traces.
-        # Explicitly disable tracing even when the host exports tracing variables.
-        with tracing_context(enabled=False):
-            result = build_graph(MockInvestigationProvider()).invoke(
-                {"run_id": run_id, "snapshot": snapshot, "findings": {}},
-                config={"recursion_limit": 12, "max_concurrency": 3, "callbacks": []},
-            )
-        report = InvestigationReport.model_validate(result["report"])
-    except Exception:
-        # Do not expose provider output or validation input through errors/logs.
-        error_code = "INVESTIGATION_FAILED"
-    with session.begin():
-        invoice = locked_invoice(session, invoice_id)
-        run = session.get(InvestigationRun, run_id)
-        run.finished_at = datetime.now(UTC)
-        if not matches(invoice, run, session):
-            run.status = "STALE"
-        elif error_code:
-            run.status = "FAILED"
-            run.error_code = error_code
-        else:
-            run.status = "COMPLETED"
-            run.report = report.model_dump(mode="json")
+        event(session, run, "QUEUED")
         session.flush()
         return view(run, invoice, session)
 

@@ -185,11 +185,27 @@ def prepared(client, engine, name="wrong-total.pdf"):
 
 
 def investigate(client, identifier, key="day-6-test", revision=1):
-    return client.post(
+    # Legacy scenario helper now explicitly drains the real durable worker.
+    response = client.post(
         f"/api/v1/invoices/{identifier}/investigations",
         **operator_auth(client),
         json={"expected_revision": revision, "idempotency_key": key},
     )
+
+    if response.status_code != 202:
+        return response
+    from app.modules.investigation.worker import run_once
+
+    run_id = uuid.UUID(response.json()["run_id"])
+    if response.json()["status"] in ("QUEUED", "RUNNING"):
+        run_once(client.app.state.session_factory, run_id=run_id)
+    result = client.get(f"/api/v1/investigations/{run_id}", **operator_auth(client))
+    assert result.status_code == 200
+    # Preserve the enqueue status for callers that assert the POST contract;
+    # report assertions inspect the subsequent GET payload after worker execution.
+    import httpx
+
+    return httpx.Response(202, json=result.json(), headers=result.headers, request=response.request)
 
 
 @pytest.mark.postgres
@@ -210,7 +226,7 @@ def test_snapshot_to_report_replay_read_and_no_financial_mutation(
     value = result.json()
     assert value["status"] == "COMPLETED" and value["applicable"] is True
     assert value["report"]["proposed_action"] == "REQUEST_EVIDENCE"
-    assert value["execution"] == "synchronous_local"
+    assert value["execution"] == "durable_worker"
     assert investigate(pg_client, identifier).json()["run_id"] == value["run_id"]
     read = pg_client.get(f"/api/v1/investigations/{value['run_id']}", **operator_auth(pg_client))
     assert read.json() == value

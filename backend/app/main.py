@@ -15,6 +15,7 @@ from app.core.errors import AppError
 from app.core.middleware import PublicReadOnly, RequestSizeLimit
 from app.db.session import build_engine, build_session_factory
 from app.modules.auth.routes import router as auth_router
+from app.modules.evidence.routes import router as evidence_router
 from app.modules.investigation.routes import router as investigation_router
 from app.modules.invoices.integration import router as integration_router
 from app.modules.invoices.routes import Db, router
@@ -116,7 +117,7 @@ def create_app(settings: Settings | None = None, engine=None) -> FastAPI:
     @app.get("/health")
     def health(session: Db):
         revision = session.scalar(text("SELECT version_num FROM alembic_version"))
-        if revision != "0007_investigation_documents":
+        if revision != "0009_durable_investigation":
             raise AppError(
                 503, "MIGRATIONS_REQUIRED", "Apply database migrations before using this backend"
             )
@@ -134,4 +135,5 @@ def create_app(settings: Settings | None = None, engine=None) -> FastAPI:
     app.include_router(router)
     app.include_router(integration_router)
     app.include_router(investigation_router)
+    app.include_router(evidence_router)
     return app

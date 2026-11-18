@@ -280,3 +280,62 @@ it does not infer financial truth from document text. No ingestion API, real ema
 import, hybrid search, live model, UI change, approval or posting capability was added.
 The synthetic corpus is loaded only in a disposable demo schema. See Day 8 progress
 and learning notes for commands, actual results and limitations. Day 9 remains gated.
+
+
+## Phase 2 Days 9?12: grounded reports and durable advisory execution
+
+`modules/evidence` adds exact invoice-identity SQL and PostgreSQL English FTS over
+latest immutable supporting-source versions. A materialized CTE filters by BOTH
+invoice UUID and normalized supplier before ranking. Fraction-based reciprocal rank
+fusion is deterministic. Twelve results per ranking bound the read set; truncation
+is explicit. pgvector was unavailable and is not simulated. The tiny development
+comparison measures lexical coverage, not live AI quality or a large-corpus ranking SLO.
+A private operator-authenticated resolver returns exact historical versions. Snapshot
+scope/hash validation and fresh retrieval comparisons invalidate stale reports.
+
+The financial/supplier/document branches still merge through a conflict-rejecting
+reducer. Document tasks now include scoped evidence search. Reports include exact
+source citations and links. A writer then produces a strict structured draft; the
+critic cannot override deterministic checks of supported claims, exact monetary
+strings, source binding, citations, action allowlist and explicit gaps. At most two
+repairs follow the initial draft. Exhaustion returns a human-evidence request,
+never financial authority. The current provider remains scripted mock.
+
+Optional MCP is a local newline-framed JSON-RPC stdio transport, with initialization,
+ping, tools/list and tools/call. The trusted host fixes invoice scope; tools accept
+no model scope/SQL/path arguments. Existing revocable JWT sessions are checked per
+request. It has no public listener, browser credential broker or separate account.
+
+Day 12 supersedes synchronous investigation POST. The endpoint commits a QUEUED run
+and returns 202 without graph execution. Existing completed legacy runs remain
+readable with their old execution marker. New jobs use a separate worker process
+of the same backend image via the optional `investigation` Compose profile.
+
+Migration `0009` extends advisory run rows with lease owner/deadline, fencing generation,
+attempts, availability, cancellation and event sequence. It adds investigation_events
+and investigation_tool_results; no financial table changes. A short SKIP LOCKED
+transaction claims work. A dedicated psycopg connection holds the per-run session
+advisory lock AND performs official PostgresSaver writes, so concurrent resume is
+excluded even if another worker fences an expired lease. Independent heartbeats
+renew only unexpired ownership. SDK setup uses nonblocking advisory-lock attempts;
+a blocking lock SELECT can deadlock with its concurrent-index migrations.
+
+The supported PostgresSaver 3.2.1 / psycopg-pool 3.3.3 packages are pinned without changing
+existing pins. SDK checkpoint tables have their own supported setup lifecycle,
+separate from Alembic financial/advisory migrations. A closed tagged-JSON serializer
+uses only registered local contracts, validates decoded models, and cannot import
+arbitrary classes or load pickle. Stable thread IDs bind checkpoints to run UUIDs.
+Workers checkpoint synchronously between supersteps and persist deduplicated tool
+results. Read calls may repeat across some crash boundaries: exactly-once execution
+or exactly-once model billing is not claimed.
+
+Final publication locks invoice then run, checks owner/fence/unexpired lease, current
+revision/hash/batch/source read sets, and never modifies invoice/approval/ledger data.
+Cancellation advances the fence immediately; in-flight nodes may finish but cannot
+publish. Recognized transient failures get bounded exponential backoff and at most
+three job attempts. Critic repair counters persist separately. The 90-second active
+execution limit is cooperative between nodes; future blocking live calls need their
+own provider timeouts. Retry requires the requesting operator, remaining attempts
+and current input. Public mode registers no investigation/evidence mutation paths
+and creates no worker/DB engine. The original extraction, n8n, approval and posting
+workflows remain separate. See the implementation reports and learning guides.

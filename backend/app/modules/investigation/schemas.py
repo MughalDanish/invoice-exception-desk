@@ -8,6 +8,9 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from app.modules.evidence.schemas import Citation, RetrievalSnapshot
+from app.modules.investigation.resolution_schemas import ResolutionReview
+
 Text = Annotated[str, Field(min_length=1, max_length=1200)]
 Digest = Annotated[str, Field(pattern=r"^[a-f0-9]{64}$")]
 Amount = Annotated[str, Field(pattern=r"^-?\d{1,32}(?:\.\d{1,16})?$", max_length=50)]
@@ -19,7 +22,7 @@ Action = Literal[
     "REVIEW_POLICY",
     "NO_RECOMMENDATION",
 ]
-RunStatus = Literal["RUNNING", "COMPLETED", "FAILED", "STALE"]
+RunStatus = Literal["QUEUED", "RUNNING", "COMPLETED", "FAILED", "CANCELLED", "STALE"]
 
 
 class Contract(BaseModel):
@@ -96,6 +99,7 @@ ToolName = Literal[
     "get_supplier_policy",
     "get_supplier_history",
     "get_supporting_documents",
+    "search_evidence",
 ]
 
 
@@ -134,12 +138,19 @@ class InvoiceSnapshot(Contract):
     blockers: Annotated[tuple[RuleEvidence, ...], Field(min_length=1, max_length=64)]
     lookup: LookupSnapshot | None = None
     documents: DocumentSnapshot | None = None
+    retrieval: RetrievalSnapshot | None = None
 
     @model_validator(mode="after")
     def scoped_documents(self):
         from app.modules.approvals.service import payload_hash
 
         seen = set()
+        if self.retrieval is not None and (
+            self.retrieval.invoice_id != self.invoice_id
+            or not self.lookup
+            or self.retrieval.supplier_key != self.lookup.supplier_key
+        ):
+            raise ValueError("Invalid retrieval scope")
         for source in self.documents.items if self.documents else ():
             if (
                 source.invoice_id != self.invoice_id
@@ -164,6 +175,11 @@ class Findings(Contract):
     items: Annotated[tuple[Finding, ...], Field(min_length=1, max_length=65)]
 
 
+class EvidenceLink(Contract):
+    citation_id: Annotated[str, Field(min_length=1, max_length=180)]
+    href: Annotated[str, Field(min_length=1, max_length=256)]
+
+
 class InvestigationReport(Contract):
     summary: Text
     findings: Annotated[tuple[Finding, ...], Field(min_length=1, max_length=65)]
@@ -178,6 +194,18 @@ class InvestigationReport(Contract):
     plan: InvestigationPlan | None = None
     tools_used: Annotated[tuple[ToolName, ...], Field(max_length=12)] = ()
     lookup_digest: Digest | None = None
+    resolution: ResolutionReview | None = None
+    citations: Annotated[tuple[Citation, ...], Field(max_length=12)] = ()
+    evidence_links: Annotated[tuple[EvidenceLink, ...], Field(max_length=12)] = ()
+
+    @model_validator(mode="after")
+    def exact_evidence_links(self):
+        expected = tuple(
+            EvidenceLink(citation_id=c.citation_id, href=c.href) for c in self.citations
+        )
+        if self.evidence_links != expected:
+            raise ValueError("Evidence links must resolve captured source versions")
+        return self
 
 
 class InvestigationRequest(Contract):
@@ -191,7 +219,7 @@ class InvestigationView(Contract):
     status: RunStatus
     applicable: bool
     mode: Literal["mock"]
-    execution: Literal["synchronous_local"] = "synchronous_local"
+    execution: Literal["synchronous_local", "durable_worker"] = "durable_worker"
     created_at: datetime
     report: InvestigationReport | None
     error_code: str | None

@@ -104,6 +104,27 @@ def detail(client, invoice_id):
     return checked(client.get(f"/api/v1/invoices/{invoice_id}"))
 
 
+def complete_synthetic_investigation(client, queued):
+    """Explicit demo worker step, allowed only inside this helper's disposable schema.
+
+    This does not intercept HTTP requests or change the public queued API contract.
+    """
+    from app.modules.investigation.worker import run_once
+
+    with client.app.state.engine.connect() as connection:
+        schema = connection.scalar(text("SELECT current_schema()"))
+    if not schema or not schema.startswith("ied_qa_"):
+        raise RuntimeError("Synthetic worker demo requires a disposable QA schema")
+    if queued["status"] != "QUEUED":
+        raise RuntimeError("Expected an enqueued synthetic investigation")
+    identifier = uuid.UUID(queued["run_id"])
+    run_once(client.app.state.session_factory, run_id=identifier)
+    result = checked(client.get(f"/api/v1/investigations/{identifier}"))
+    if result["status"] != "COMPLETED":
+        raise RuntimeError("Synthetic investigation worker did not complete")
+    return result
+
+
 def post(client, invoice_id, revision=1):
     return client.post(f"/api/v1/invoices/{invoice_id}/post", json={"expected_revision": revision})
 

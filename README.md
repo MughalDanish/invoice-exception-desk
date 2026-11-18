@@ -59,7 +59,15 @@ a versioned append-only supporting-evidence table, scoped bounded capture and a
 synthetic PO/receipt/email corpus. The document branch inventories missing evidence;
 it does not reconcile text or grant financial authority. See the
 [Day 8 report](docs/day-8-progress.md) and [learning guide](docs/learning-day-8.md).
-Day 9 requires separate confirmation.
+Days 9?12 add scoped exact SQL/full-text retrieval with versioned evidence links,
+a bounded resolution writer/critic, a local read-only MCP stdio adapter and durable
+PostgreSQL-backed investigation execution. Investigation POST now returns `QUEUED`;
+a separate worker process of the same backend resumes its checkpoint and publishes
+only current, authorized advisory results. No AI approval or posting is added.
+See [Days 9?12 integration results](docs/days-9-12-progress.md),
+[Day 12 progress](docs/day-12-progress.md) and [worker learning guide](docs/learning-day-12.md).
+The provider remains scripted mock. Investigation UI remains Day 14.
+Day 13 requires separate confirmation.
 
 Run the isolated synthetic example (existing local PostgreSQL must be running):
 
@@ -440,3 +448,36 @@ The supplied requirements are preserved in `docs/PROJECT_SPEC.md` and
 `.env.example` contains placeholders only. Use the setup helper or copy it to `.env`
 and replace all `CHANGE_ME` values. Never commit real secrets
 or client documents.
+
+
+## Durable investigation worker (Days 9?12)
+
+After installing the pinned backend requirements and applying migrations:
+
+```powershell
+.venv/Scripts/python.exe scripts/dev.py migrate
+.venv/Scripts/python.exe scripts/dev.py worker --setup-only
+.venv/Scripts/python.exe scripts/dev.py worker
+```
+
+The worker initializes the official PostgreSQL checkpoint schema using its supported
+setup API. No Redis or Celery is required. For Docker, build the matching backend
+image, migrate it, then enable the optional worker profile:
+
+```powershell
+docker compose build backend
+docker compose run --rm --no-deps backend python -m alembic upgrade head
+docker compose --profile dashboard --profile automation --profile investigation up -d --no-build
+```
+
+Authenticated POST `/api/v1/invoices/{id}/investigations` enqueues the captured
+revision. Poll GET `/api/v1/investigations/{run_id}` every 2?5 seconds with backoff,
+stopping at a terminal status. Creator-only cancel/retry controls require the same
+session and CSRF protection as existing operator actions. A newer invoice or source
+version requires a new investigation. Reports contain authenticated, version-bound
+`evidence_links`; their source excerpts remain untrusted advisory evidence.
+
+The worker image must match the migrated API code. Existing local containers are
+not updated merely by changing repository files. The original n8n workflow still
+handles intake and notifications; it does not automatically start investigations
+or post anything to the ledger.

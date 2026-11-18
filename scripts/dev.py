@@ -15,7 +15,17 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=["migrate", "seed", "test", "serve"])
+    parser.add_argument(
+        "command", choices=["migrate", "seed", "test", "serve", "worker"]
+    )
+    parser.add_argument(
+        "--once", action="store_true", help="Claim at most one investigation job"
+    )
+    parser.add_argument(
+        "--setup-only",
+        action="store_true",
+        help="Initialize supported checkpoint tables",
+    )
     parser.add_argument(
         "--all", action="store_true", help="Seed every synthetic fixture"
     )
@@ -43,6 +53,9 @@ def main():
         "migrate": ["-m", "alembic", "upgrade", "head"],
         "seed": ["-m", "app.seed"] + (["--all"] if args.all else []),
         "test": ["-m", "pytest", "-q", "--tb=short", "-p", "no:cacheprovider"],
+        "worker": ["-m", "app.modules.investigation.worker"]
+        + (["--once"] if args.once else [])
+        + (["--setup-only"] if args.setup_only else []),
         "serve": [
             "-m",
             "uvicorn",
@@ -54,14 +67,17 @@ def main():
             "8000",
         ],
     }
-    if args.command == "test":
+    if args.command in ("test", "worker"):
         # Tests must never inherit a live provider/key from the operator's .env.
         env["AI_MODE"] = "mock"
         env["INVESTIGATION_MODE"] = "mock"
         env["GEMINI_API_KEY"] = ""
         env["GEMINI_MODEL"] = ""
         # Separate sandbox/elevated runs must not share pytest's Windows ACLs.
-        commands["test"].extend(["--basetemp", tempfile.mkdtemp(prefix="ied-pytest-")])
+        if args.command == "test":
+            commands["test"].extend(
+                ["--basetemp", tempfile.mkdtemp(prefix="ied-pytest-")]
+            )
     return subprocess.run(
         [sys.executable, *commands[args.command]],
         cwd=ROOT / "backend",

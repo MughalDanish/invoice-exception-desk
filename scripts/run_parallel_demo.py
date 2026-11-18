@@ -11,7 +11,14 @@ sys.path.insert(0, str(ROOT / "backend"))
 
 from app.db.models import InvestigationDocument, Invoice
 from app.modules.approvals.service import payload_hash
-from app.qa import checked, detail, isolated_client, process, upload
+from app.qa import (
+    checked,
+    complete_synthetic_investigation,
+    detail,
+    isolated_client,
+    process,
+    upload,
+)
 from dotenv import dotenv_values
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session
@@ -41,6 +48,7 @@ def main():
                 ),
                 (202,),
             )
+            result = complete_synthetic_investigation(client, result)
             assert result["status"] == "COMPLETED", "Mock investigation failed"
             assert detail(client, identifier) == before, "Financial records changed"
             assert checked(client.get("/api/v1/ledger"))["total"] == 0
