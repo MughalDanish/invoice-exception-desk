@@ -31,7 +31,7 @@ def main():
     if raw_url:
         url = make_url(raw_url)
         if url.host == "postgres":
-            url = url.set(host="localhost", port=5433)
+            url = url.set(host="127.0.0.1", port=5433)
         env["DATABASE_URL"] = url.render_as_string(hide_password=False)
     env["STORAGE_DIR"] = str(ROOT / "storage" / "uploads")
     env["FIXTURES_DIR"] = str(ROOT / "fixtures")
@@ -42,7 +42,7 @@ def main():
     commands = {
         "migrate": ["-m", "alembic", "upgrade", "head"],
         "seed": ["-m", "app.seed"] + (["--all"] if args.all else []),
-        "test": ["-m", "pytest", "-q", "-p", "no:cacheprovider"],
+        "test": ["-m", "pytest", "-q", "--tb=short", "-p", "no:cacheprovider"],
         "serve": [
             "-m",
             "uvicorn",
@@ -55,6 +55,11 @@ def main():
         ],
     }
     if args.command == "test":
+        # Tests must never inherit a live provider/key from the operator's .env.
+        env["AI_MODE"] = "mock"
+        env["INVESTIGATION_MODE"] = "mock"
+        env["GEMINI_API_KEY"] = ""
+        env["GEMINI_MODEL"] = ""
         # Separate sandbox/elevated runs must not share pytest's Windows ACLs.
         commands["test"].extend(["--basetemp", tempfile.mkdtemp(prefix="ied-pytest-")])
     return subprocess.run(

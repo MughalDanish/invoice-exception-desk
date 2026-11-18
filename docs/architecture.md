@@ -185,5 +185,45 @@ Updating it is an explicit export/review/redeploy operation. It survives sleepin
 free hosts without persisting confidential uploads. Neon is optional for a future
 private cloud database, not required merely to serve this portfolio projection.
 
-No investigation/agent state exists yet. Phase 2 starts with Day 6 only after
-separate authorization, retaining this tested baseline and advisory-only policy.
+## Phase 2 Day 6: advisory investigation foundation
+
+`modules/investigation` adds a fixed LangGraph sequence:
+
+```mermaid
+flowchart LR
+  Auth[Operator cookie + CSRF] --> Capture[Short transaction: capture snapshot / save run]
+  Capture --> Graph[Snapshot -> mock findings -> guarded advisory report]
+  Graph --> Publish[Short transaction: refresh locked invoice / check applicability]
+  Publish --> Report[COMPLETED report or STALE / FAILED]
+```
+
+The graph receives frozen, bounded Pydantic data rather than a database session or
+ORM objects. It has no network access or mutation tools. Only recorded
+`TOTAL_MISMATCH` expected/observed amounts are explained. Other blockers produce
+`INSUFFICIENT` findings. A deterministic guard requires one exact supported output
+per snapshot blocker; a model critic is not implemented yet.
+
+Migration `0006_investigation` adds only `investigation_runs`. It stores a minimal
+snapshot, input identity, provider/policy versions, requester, status and report.
+The request key is unique per invoice; an old key cannot bind to changed input.
+This stronger key scope detects conflicts even across validation batches.
+Run status is a checked string, separate from the unchanged financial state machine.
+
+POST `/api/v1/invoices/{id}/investigations` accepts an expected revision and
+idempotency key. GET `/api/v1/investigations/{id}` rechecks applicability.
+Both require the existing operator session; POST requires CSRF. Integration keys
+cannot invoke them. The public app registers neither route and still constructs
+no database engine. No private report is exposed publicly.
+
+POST returns 202 with an explicit `execution=synchronous_local` marker. In this
+milestone the bounded, offline three-node graph completes within the request;
+202 is retained for the planned enqueue contract. It is not background execution.
+No DB transaction is held while the graph runs. On completion a fresh locked read
+checks revision, payload hash, validation batch, document hash and review status.
+Stale reports are suppressed on reads; historical stored content is preserved.
+
+LangGraph is pinned to 1.2.22 with resolved dependencies. Its transitive LangSmith
+package does not enable tracing: execution explicitly disables it, even if host
+tracing environment variables are present. No Gemini extraction changes are needed.
+Interrupted RUNNING records have no recovery yet; durable checkpointing and workers
+remain Day 12. UI integration is Day 14. See the Day 6 report and learning guide.

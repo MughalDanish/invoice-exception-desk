@@ -39,13 +39,39 @@ benchmark, public write-denial tests, deployment configurations, screenshots,
 silent walkthrough and owner learning notes. PostgreSQL remains authoritative for
 the writable workflow; the public process serves only a curated fixture export.
 
-Actual cloud deployment remains pending owner access/authorization. Gemini's request construction and
-failure handling are tested offline with the real SDK and a fake HTTP transport;
-live extraction has not been verified. Gmail and Telegram require account credentials.
+Actual cloud deployment remains pending owner access/authorization. Live Gemini
+extraction and Gmail-to-Slack intake were verified locally during Phase 1 follow-up.
+Automated regression tests use synthetic fixtures and fake SDK transports; Day 6
+does not run live model calls or send notifications.
 
 The Phase 2 documents are preserved in [docs/phase-2](docs/phase-2/AI_UPGRADE_START_HERE.md).
-The next milestone is Day 6 (typed investigation contracts and one mock graph),
-which has not been implemented and requires separate confirmation.
+Day 6 adds an advisory-only LangGraph mock investigation with strict typed contracts,
+snapshot-bound reports, an additive migration and operator-authenticated API routes.
+It explains recorded total-mismatch evidence without reading documents or changing
+financial records. Other blockers explicitly remain insufficiently investigated.
+See [Day 6 learning guide](docs/learning-day-6.md) and
+[milestone results](docs/day-6-progress.md). Day 7 requires separate confirmation.
+
+Run the isolated synthetic example (existing local PostgreSQL must be running):
+
+```powershell
+.venv/Scripts/python.exe -m pip install -r backend/requirements.txt
+.venv/Scripts/python.exe scripts/run_investigation_demo.py
+```
+
+The example creates and removes its own schema and writes only a synthetic report
+to ignored `storage/day-6-synthetic-report.json`. No API key or live model is used.
+It does not update the running containers. To enable these new routes on your local
+backend, build its image and run Alembic before starting the updated backend:
+
+```powershell
+docker compose build backend
+docker compose run --rm --no-deps backend python -m alembic upgrade head
+docker compose up -d --no-build --no-deps backend
+```
+
+This milestone has no investigation screen, supervisor, retrieval or durable worker.
+Existing invoice controls and n8n intake remain independent of investigations.
 
 ## Day 5 results and public preview
 

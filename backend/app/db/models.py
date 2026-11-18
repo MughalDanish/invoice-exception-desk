@@ -221,3 +221,32 @@ class AuthLoginWindow(Base):
     key_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     attempts: Mapped[int] = mapped_column(Integer)
+
+
+class InvestigationRun(IdentityMixin, Base):
+    __tablename__ = "investigation_runs"
+    __table_args__ = (
+        UniqueConstraint("invoice_id", "idempotency_key", name="uq_investigation_request"),
+        CheckConstraint("revision >= 1", name="investigation_positive_revision"),
+        CheckConstraint(
+            "status IN ('RUNNING', 'COMPLETED', 'FAILED', 'STALE')",
+            name="investigation_status",
+        ),
+        CheckConstraint("mode = 'mock'", name="investigation_mock_only"),
+        Index("ix_investigation_invoice_created", "invoice_id", "created_at"),
+    )
+
+    invoice_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("invoices.id"))
+    revision: Mapped[int] = mapped_column(Integer)
+    payload_sha256: Mapped[str] = mapped_column(String(64))
+    validation_batch_id: Mapped[uuid.UUID] = mapped_column(Uuid)
+    idempotency_key: Mapped[str] = mapped_column(String(100))
+    status: Mapped[str] = mapped_column(String(20))
+    mode: Mapped[str] = mapped_column(String(10))
+    provider_version: Mapped[str] = mapped_column(String(80))
+    policy_version: Mapped[str] = mapped_column(String(40))
+    requested_by: Mapped[str] = mapped_column(String(200))
+    snapshot: Mapped[dict] = mapped_column(JSONB)
+    report: Mapped[dict | None] = mapped_column(JSONB)
+    error_code: Mapped[str | None] = mapped_column(String(80))
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

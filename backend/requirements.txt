@@ -53,3 +53,24 @@ websockets==16.1.1
 PyJWT==2.15.1
 argon2-cffi==25.1.0
 argon2-cffi-bindings==26.2.0
+
+# Phase 2 graph runtime and resolved dependencies (no live provider enabled).
+httpcore2==2.16.2
+httpx2==2.16.2
+jsonpatch==1.47
+jsonpointer==3.12
+langchain-core==1.8.2
+langchain-protocol==0.0.21
+langgraph-checkpoint==4.3.2
+langgraph-prebuilt==1.1.2
+langgraph-sdk==0.4.14
+langgraph==1.2.22
+langsmith==0.15.0
+orjson==3.13.0
+ormsgpack==1.13.1
+PyYAML==6.0.3
+requests-toolbelt==1.0.0
+truststore==0.10.5
+uuid_utils==0.19.0
+xxhash==4.1.0
+zstandard==0.25.0

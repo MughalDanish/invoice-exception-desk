@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://app:app@localhost:5433/invoices"
     public_demo: bool = False
     ai_mode: Literal["mock", "gemini"] = "mock"
+    investigation_mode: Literal["mock"] = "mock"
     gemini_api_key: SecretStr = SecretStr("")
     gemini_model: str = ""
     gemini_timeout_seconds: int = Field(default=60, ge=1, le=60)
