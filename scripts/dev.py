@@ -67,7 +67,7 @@ def main():
             "8000",
         ],
     }
-    if args.command in ("test", "worker"):
+    if args.command == "test":
         # Tests must never inherit a live provider/key from the operator's .env.
         env["AI_MODE"] = "mock"
         env["INVESTIGATION_MODE"] = "mock"

@@ -15,11 +15,11 @@ def database_now(session):
     return session.scalar(select(func.clock_timestamp()))
 
 
-def event(session, run, kind, **details):
+def event(session, run, event_type, **details):
     # Caller holds the run row lock; sequence is monotonic across workers and API controls.
     run.event_seq += 1
     session.add(
-        InvestigationEvent(run_id=run.id, seq=run.event_seq, event_type=kind, details=details)
+        InvestigationEvent(run_id=run.id, seq=run.event_seq, event_type=event_type, details=details)
     )
 
 
@@ -34,7 +34,7 @@ def claim_next(factory, owner, *, lease_seconds=30, run_id=None):
     with factory.begin() as session:
         now = database_now(session)
         query = select(InvestigationRun).where(
-            InvestigationRun.provider_version == "scripted-durable-v4",
+            InvestigationRun.provider_version.in_(("scripted-durable-v4", "gemini-mcp-v1")),
             InvestigationRun.cancel_requested.is_(False),
             or_(
                 and_(InvestigationRun.status == "QUEUED", InvestigationRun.available_at <= now),

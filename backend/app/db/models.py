@@ -232,7 +232,7 @@ class InvestigationRun(IdentityMixin, Base):
             "status IN ('QUEUED', 'RUNNING', 'COMPLETED', 'FAILED', 'CANCELLED', 'STALE')",
             name="investigation_status",
         ),
-        CheckConstraint("mode = 'mock'", name="investigation_mock_only"),
+        CheckConstraint("mode IN ('mock','gemini')", name="investigation_mock_only"),
         Index("ix_investigation_invoice_created", "invoice_id", "created_at"),
         Index("ix_investigation_queue", "status", "available_at", "lease_until"),
     )
@@ -247,6 +247,11 @@ class InvestigationRun(IdentityMixin, Base):
     provider_version: Mapped[str] = mapped_column(String(80))
     policy_version: Mapped[str] = mapped_column(String(40))
     requested_by: Mapped[str] = mapped_column(String(200))
+    requested_user_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, nullable=True)
+    requested_session_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, nullable=True)
+    budget_metadata: Mapped[dict] = mapped_column(
+        JSONB, default=dict, server_default=text("'{}'::jsonb")
+    )
     snapshot: Mapped[dict] = mapped_column(JSONB)
     report: Mapped[dict | None] = mapped_column(JSONB)
     error_code: Mapped[str | None] = mapped_column(String(80))

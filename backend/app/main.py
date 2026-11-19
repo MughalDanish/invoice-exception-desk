@@ -117,7 +117,7 @@ def create_app(settings: Settings | None = None, engine=None) -> FastAPI:
     @app.get("/health")
     def health(session: Db):
         revision = session.scalar(text("SELECT version_num FROM alembic_version"))
-        if revision != "0009_durable_investigation":
+        if revision != "0010_live_investigation":
             raise AppError(
                 503, "MIGRATIONS_REQUIRED", "Apply database migrations before using this backend"
             )

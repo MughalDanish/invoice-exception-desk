@@ -6,7 +6,7 @@ from decimal import Decimal
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, JsonValue, model_validator
 
 from app.modules.evidence.schemas import Citation, RetrievalSnapshot
 from app.modules.investigation.resolution_schemas import ResolutionReview
@@ -126,6 +126,7 @@ class ToolResult(Contract):
     evidence_id: Annotated[str, Field(min_length=1, max_length=180)]
     status: Literal["FOUND", "MISSING", "NOT_READ"]
     facts: Annotated[tuple[Text, ...], Field(min_length=1, max_length=4)]
+    data: dict[str, JsonValue] = Field(default_factory=dict)
 
 
 class InvoiceSnapshot(Contract):
@@ -139,6 +140,7 @@ class InvoiceSnapshot(Contract):
     lookup: LookupSnapshot | None = None
     documents: DocumentSnapshot | None = None
     retrieval: RetrievalSnapshot | None = None
+    extracted_fields: dict[str, JsonValue] | None = None
 
     @model_validator(mode="after")
     def scoped_documents(self):
@@ -167,7 +169,7 @@ class InvoiceSnapshot(Contract):
 class Finding(Contract):
     task_id: Annotated[str, Field(min_length=1, max_length=100)]
     claim: Text
-    evidence_ids: Annotated[tuple[str, ...], Field(min_length=1, max_length=4)]
+    evidence_ids: Annotated[tuple[str, ...], Field(min_length=1, max_length=12)]
     status: Literal["SUPPORTED", "CONTRADICTED", "INSUFFICIENT"]
 
 
@@ -189,14 +191,27 @@ class InvestigationReport(Contract):
     source_revision: Annotated[int, Field(ge=1)]
     source_payload_hash: Digest
     source_validation_batch: UUID
-    mode: Literal["mock"] = "mock"
+    mode: Literal["mock", "gemini"] = "mock"
     advisory_only: Literal[True] = True
     plan: InvestigationPlan | None = None
     tools_used: Annotated[tuple[ToolName, ...], Field(max_length=12)] = ()
     lookup_digest: Digest | None = None
     resolution: ResolutionReview | None = None
-    citations: Annotated[tuple[Citation, ...], Field(max_length=12)] = ()
-    evidence_links: Annotated[tuple[EvidenceLink, ...], Field(max_length=12)] = ()
+    citations: Annotated[tuple[Citation, ...], Field(max_length=24)] = ()
+    evidence_links: Annotated[tuple[EvidenceLink, ...], Field(max_length=24)] = ()
+    assertions: Annotated[tuple[dict[str, JsonValue], ...], Field(max_length=384)] = ()
+    uncertainties: Annotated[tuple[Text, ...], Field(max_length=24)] = ()
+    resolution_rationale: Text | None = None
+    model: Annotated[str, Field(max_length=100)] | None = None
+    provider_version: Annotated[str, Field(max_length=80)] | None = None
+    termination_code: (
+        Literal[
+            "INVESTIGATION_INVALID_EVIDENCE_REFERENCES",
+            "INVESTIGATION_REPEATED_REPAIR",
+            "INVESTIGATION_REPAIR_EXHAUSTED",
+        ]
+        | None
+    ) = None
 
     @model_validator(mode="after")
     def exact_evidence_links(self):
@@ -218,7 +233,7 @@ class InvestigationView(Contract):
     invoice_id: UUID
     status: RunStatus
     applicable: bool
-    mode: Literal["mock"]
+    mode: Literal["mock", "gemini"]
     execution: Literal["synchronous_local", "durable_worker"] = "durable_worker"
     created_at: datetime
     report: InvestigationReport | None

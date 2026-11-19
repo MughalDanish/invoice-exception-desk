@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, Depends, Query, Response
+from fastapi import APIRouter, Depends, Query, Request, Response
 
 from app.core.auth import require_operator
 from app.modules.investigation.controls import control, events, list_runs
@@ -22,10 +22,17 @@ def investigate(
     session: Db,
     actor: Operator,
     response: Response,
+    request: Request,
 ):
     # Day 12 commits a snapshot-bound queue entry. HTTP never executes the graph.
     response.headers["Cache-Control"] = "no-store"
-    return start_investigation(session, invoice_id, body, actor)
+    from app.modules.auth.service import current_principal
+
+    settings = request.app.state.settings
+    principal = current_principal(request) if settings.investigation_mode == "gemini" else None
+    return start_investigation(
+        session, invoice_id, body, actor, settings=settings, principal=principal
+    )
 
 
 @router.get("/investigations/{run_id}", response_model=InvestigationView)
@@ -65,6 +72,10 @@ def cancel_investigation(run_id: uuid.UUID, session: Db, actor: Operator, respon
 
 
 @router.post("/investigations/{run_id}/retry", response_model=InvestigationView)
-def retry_investigation(run_id: uuid.UUID, session: Db, actor: Operator, response: Response):
+def retry_investigation(
+    run_id: uuid.UUID, session: Db, actor: Operator, response: Response, request: Request
+):
+    from app.modules.auth.service import current_principal
+
     response.headers["Cache-Control"] = "no-store"
-    return control(session, run_id, actor, "retry")
+    return control(session, run_id, actor, "retry", principal=current_principal(request))

@@ -12,11 +12,11 @@ from psycopg.rows import dict_row
 from pydantic import BaseModel
 
 from app.modules.evidence import schemas as evidence_schemas
-from app.modules.investigation import resolution, resolution_schemas, schemas
+from app.modules.investigation import live_schemas, resolution, resolution_schemas, schemas
 
 MODELS = {
     f"{value.__module__}.{value.__name__}": value
-    for module in (schemas, evidence_schemas, resolution, resolution_schemas)
+    for module in (schemas, evidence_schemas, resolution, resolution_schemas, live_schemas)
     for value in vars(module).values()
     if isinstance(value, type)
     and issubclass(value, BaseModel)

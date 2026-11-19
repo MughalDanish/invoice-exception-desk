@@ -5,8 +5,10 @@ import json
 import logging
 import threading
 import time
+import traceback
 import uuid
-from datetime import timedelta
+from contextlib import ExitStack
+from datetime import datetime, timedelta
 
 from langsmith import tracing_context
 from sqlalchemy import select
@@ -52,7 +54,9 @@ def require_claim(session, claim):
     return run
 
 
-def finish(factory, claim, report=None, error=None, transient=False):
+def finish(
+    factory, claim, report=None, error=None, transient=False, error_code=None, error_site=None
+):
     """Lock invoice then run, matching enqueue/control lock order; fence every publication."""
     with factory.begin() as session:
         initial = session.get(InvestigationRun, claim.run_id)
@@ -67,14 +71,33 @@ def finish(factory, claim, report=None, error=None, transient=False):
             run.error_code = "INVESTIGATION_RETRY_SCHEDULED"
         elif error:
             run.status = "FAILED"
-            run.error_code = "INVESTIGATION_FAILED"
+            run.error_code = error_code or "INVESTIGATION_FAILED"
         else:
+            if run.mode == "gemini":
+                from app.modules.auth.service import active_session
+                from app.modules.investigation.budgets import LiveLimitError
+
+                active_session(
+                    session,
+                    {"sub": str(run.requested_user_id), "sid": str(run.requested_session_id)},
+                )
+                deadline = (run.budget_metadata or {}).get("deadline")
+                if deadline and now >= datetime.fromisoformat(deadline):
+                    raise LiveLimitError("INVESTIGATION_DEADLINE")
             run.status = "COMPLETED"
-            run.report = InvestigationReport.model_validate(report).model_dump(mode="json")
-            run.error_code = None
+            validated = InvestigationReport.model_validate(report)
+            if validated.mode != run.mode:
+                raise ValueError("INVESTIGATION_PROVIDER_MODE_MISMATCH")
+            run.report = validated.model_dump(mode="json")
+            run.error_code = validated.termination_code
+            if validated.termination_code:
+                run.status = "FAILED"
         run.finished_at = None if run.status == "QUEUED" else now
         run.lease_owner = run.lease_until = None
-        event(session, run, run.status, attempt=run.attempts)
+        details = {"attempt": run.attempts}
+        if error_site is not None:
+            details["error_site"] = error_site
+        event(session, run, run.status, **details)
 
 
 def save_step(factory, claim, values, next_nodes):
@@ -102,7 +125,16 @@ def save_step(factory, claim, values, next_nodes):
         )
 
 
-def execute_claim(factory, claim, *, lease_seconds=30, provider=None, after_step=None):
+def execute_claim(
+    factory,
+    claim,
+    *,
+    lease_seconds=30,
+    provider=None,
+    after_step=None,
+    settings=None,
+    mcp_factory=None,
+):
     """One dedicated DB connection holds the session lock AND performs checkpoint writes.
 
     Lease expiry can fence this worker, but another worker cannot touch checkpoints
@@ -125,7 +157,8 @@ def execute_claim(factory, claim, *, lease_seconds=30, provider=None, after_step
     thread = None
     acquired = False
     try:
-        with checkpoint_connection(engine) as (connection, saver):
+        with ExitStack() as resources:
+            connection, saver = resources.enter_context(checkpoint_connection(engine))
             key = f"ied-investigation:{claim.run_id}"
             acquired = connection.execute(
                 "SELECT pg_try_advisory_lock(hashtextextended(%s, 0)) AS acquired", (key,)
@@ -151,15 +184,47 @@ def execute_claim(factory, claim, *, lease_seconds=30, provider=None, after_step
                         event(session, run, "STALE")
                         return True
                     snapshot = InvoiceSnapshot.model_validate_json(json.dumps(run.snapshot))
-                graph = build_graph(provider or MockInvestigationProvider(), checkpointer=saver)
+                    mode = run.mode
+                    model_name = (run.budget_metadata or {}).get("model")
+                thread = threading.Thread(target=renew, daemon=True)
+                thread.start()
+                live_budget = None
+                if mode == "gemini":
+                    if settings is None or settings.public_demo:
+                        raise ValueError("LIVE_WORKER_SETTINGS_REQUIRED")
+                    from app.modules.investigation.budgets import LiveBudget
+                    from app.modules.investigation.delegation import assert_run_authorized
+                    from app.modules.investigation.gemini_provider import (
+                        GeminiInvestigationProvider,
+                    )
+                    from app.modules.investigation.live_graph import build_live_graph
+                    from app.modules.investigation.mcp_client import MCPClient
+
+                    def authorize():
+                        return assert_run_authorized(settings, factory, claim)
+
+                    authorize()
+                    live_budget = LiveBudget(factory, claim, settings)
+                    live_budget.remaining()
+                    box = resources.enter_context(
+                        (mcp_factory or MCPClient)(settings, factory, claim)
+                    )
+                    live_provider = provider or GeminiInvestigationProvider(
+                        api_key=settings.gemini_api_key.get_secret_value(), model=model_name
+                    )
+                    if provider is None:
+                        resources.callback(live_provider.close)
+                    graph = build_live_graph(
+                        live_provider, box, live_budget, authorize, checkpointer=saver
+                    )
+                else:
+                    graph = build_graph(provider or MockInvestigationProvider(), checkpointer=saver)
                 config = {
                     "configurable": {"thread_id": str(claim.run_id)},
-                    "recursion_limit": 16,
+                    "recursion_limit": 64 if mode == "gemini" else 16,
                     "max_concurrency": 3,
                     "callbacks": [],
                 }
-                thread = threading.Thread(target=renew, daemon=True)
-                thread.start()
                 started = time.monotonic()
                 state = graph.get_state(config)
                 initial = (
@@ -168,8 +233,11 @@ def execute_claim(factory, claim, *, lease_seconds=30, provider=None, after_step
                     else None
                 )
                 with tracing_context(enabled=False):
-                    for _ in range(24):
-                        if lost.is_set() or time.monotonic() - started > 90:
+                    for _ in range(48 if mode == "gemini" else 24):
+                        if live_budget:
+                            live_budget.remaining()
+                            authorize()
+                        if lost.is_set() or (mode != "gemini" and time.monotonic() - started > 90):
                             raise LostLease() if lost.is_set() else TimeoutError()
                         with factory.begin() as session:
                             require_claim(session, claim)
@@ -192,10 +260,30 @@ def execute_claim(factory, claim, *, lease_seconds=30, provider=None, after_step
     except LostLease:
         return False
     except Exception as exc:
+        frames = traceback.extract_tb(exc.__traceback__)
+        last_frame = next(
+            (f for f in reversed(frames) if "investigation" in f.filename), frames[-1]
+        )
+        error_site = f"{last_frame.name}:{last_frame.lineno}"
         logging.getLogger(__name__).warning(
-            "Investigation worker failed run=%s error_type=%s", claim.run_id, type(exc).__name__
+            "Investigation worker failed run=%s error_type=%s error_site=%s",
+            claim.run_id,
+            type(exc).__name__,
+            error_site,
         )
         try:
+            from app.core.errors import AppError
+            from app.modules.investigation.budgets import LiveLimitError
+            from app.modules.investigation.gemini_provider import GeminiInvestigationError
+
+            safe_code = (
+                exc.code
+                if isinstance(exc, GeminiInvestigationError)
+                or isinstance(exc, AppError)
+                and exc.code
+                in {"INVESTIGATION_DEADLINE", "INVESTIGATION_STALE", "MCP_UNAUTHORIZED"}
+                else (str(exc) if isinstance(exc, LiveLimitError) else None)
+            )
             finish(
                 factory,
                 claim,
@@ -204,6 +292,8 @@ def execute_claim(factory, claim, *, lease_seconds=30, provider=None, after_step
                     exc,
                     (TransientInvestigationError, TimeoutError, ConnectionError, OperationalError),
                 ),
+                error_code=safe_code,
+                error_site=error_site,
             )
         except LostLease:
             pass
@@ -223,6 +313,8 @@ def run_once(
     lease_seconds=30,
     provider=None,
     after_step=None,
+    settings=None,
+    mcp_factory=None,
 ):
     if setup:
         setup_checkpoints(factory.kw["bind"])
@@ -231,7 +323,13 @@ def run_once(
     )
     return (
         execute_claim(
-            factory, claim, lease_seconds=lease_seconds, provider=provider, after_step=after_step
+            factory,
+            claim,
+            lease_seconds=lease_seconds,
+            provider=provider,
+            after_step=after_step,
+            settings=settings,
+            mcp_factory=mcp_factory,
         )
         if claim
         else False
@@ -257,7 +355,7 @@ def main():
             return
         owner = uuid.uuid4().hex
         while True:
-            worked = run_once(factory, owner=owner, setup=False)
+            worked = run_once(factory, owner=owner, setup=False, settings=settings)
             if args.once:
                 return
             if not worked:

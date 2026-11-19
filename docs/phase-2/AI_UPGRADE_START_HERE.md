@@ -1,5 +1,19 @@
 # Invoice Exception Desk — Phase 2 execution entry point
 
+## Current checkpoint and next authorization
+
+Days 6–12 are implemented with a scripted investigation provider. Day 13 has been
+revised to require **live Gemini investigation through an MCP client**, not only
+budget controls or an optional model comparison. Review the findings, security
+boundaries, implementation steps and acceptance gates in
+[DAY_13_LIVE_INVESTIGATION_PLAN.md](DAY_13_LIVE_INVESTIGATION_PLAN.md).
+The owner authorized Days 13 and 14 on 19 November 2026. Implement and verify
+both against their acceptance gates; do not push or proceed to Day 15 without
+subsequent authorization. Keep mock defaults and distinguish source delivery
+from runtime/container activation. See the milestone reports for actual outcomes.
+The historical Day 6 first-execution instruction below is not a request to redo
+completed milestones. Preserve current work and all historical reports.
+
 Read the existing PROJECT_SPEC.md, CODEX_START_HERE.md, IMPLEMENTATION_BRIEF.md, architecture and Day 1–4 reports in their actual repository locations, then all six Phase 2 documents. This is an additive specification, not a replacement for Phase 1. The supplied reports describe 142 passing PostgreSQL tests and two browser tests; rerun them, do not assume they still pass. No source repository was inspected by the author of this upgrade.
 
 ## Execution contract

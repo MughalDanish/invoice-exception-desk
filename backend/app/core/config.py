@@ -10,10 +10,19 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore", hide_input_in_errors=True)
 
-    database_url: str = "postgresql+psycopg://app:app@localhost:5433/invoices"
+    database_url: str = Field(
+        default="postgresql+psycopg://app:app@localhost:5433/invoices", repr=False
+    )
     public_demo: bool = False
     ai_mode: Literal["mock", "gemini"] = "mock"
-    investigation_mode: Literal["mock"] = "mock"
+    investigation_mode: Literal["mock", "gemini"] = "mock"
+    investigation_deadline_seconds: int = Field(default=180, ge=30, le=300)
+    investigation_mcp_startup_seconds: int = Field(default=20, ge=1, le=30)
+    investigation_max_model_steps: int = Field(default=8, ge=1, le=12)
+    investigation_max_http_attempts: int = Field(default=12, ge=1, le=16)
+    investigation_max_tool_calls: int = Field(default=12, ge=1, le=20)
+    investigation_token_budget: int = Field(default=24000, ge=2048, le=50000)
+    investigation_max_output_tokens: int = Field(default=2048, ge=256, le=2048)
     gemini_api_key: SecretStr = SecretStr("")
     gemini_model: str = ""
     gemini_timeout_seconds: int = Field(default=60, ge=1, le=60)
@@ -33,7 +42,7 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def require_credentials(self):
         if self.public_demo:
-            if self.ai_mode != "mock":
+            if self.ai_mode != "mock" or self.investigation_mode != "mock":
                 raise ValueError("Public demonstration requires mock mode")
             return self
         if (

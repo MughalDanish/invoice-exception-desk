@@ -3,6 +3,26 @@
 ## Product objective
 Evolve the existing exception queue into an evidence-grounded investigation assistant for small bookkeeping firms, wholesalers and construction companies. It explains why a blocked invoice is questionable, identifies missing evidence and proposes a safe operator action. It does not certify authenticity or authorize payment. Keep the original upload, extract, validate, correct, review and internal ledger workflow.
 
+## Revised Day 13 delivery requirement (authorized)
+
+Implement a genuinely live Gemini investigator, not solely a scripted framework.
+Use the existing configured model if verified compatible with function calling.
+The host must expose authorized MCP definitions, execute model-selected calls
+through an actual stdio MCP client/server connection and return evidence for
+subsequent model turns. Keep mocks separately available. Initial prompts must not
+contain all evidence; acceptance includes withheld synthetic facts and changed
+evidence producing changed conclusions/uncertainties. See the detailed
+[Day 13 plan](DAY_13_LIVE_INVESTIGATION_PLAN.md), authorized on 19 November 2026. See milestone reports for actual verification.
+
+The existing role table below describes responsibilities, not a requirement for
+one paid model/process per role. Day 13 implements one bounded live investigator
+covering mandatory objectives, followed by a writer/critic and deterministic gate.
+Actual existing tools are the seven `ToolName` entries; names below such as
+`get_purchase_order` are conceptual future capabilities, not implemented tools.
+Structured live reports must additionally expose bounded resolution rationale,
+typed financial assertions and unresolved uncertainties. Preserve existing fields,
+exact money/currency, source binding and advisory actions; support old mock reports.
+
 ## Vertical slice and scope
 Start with NEEDS_REVIEW invoices that have a current validation batch and usable extracted fields. Include wrong total, duplicate, amount outlier and unknown vendor. Add synthetic purchase order, receipt and email evidence for a price/quantity discrepancy later. PO/receipt matching is new Phase 2 evidence functionality, not an existing feature or an automatic new posting rule. No real mailbox access, supplier contact, bank account modification, payments or ERP integration. Bank-change investigation is an optional synthetic future case, not release scope.
 

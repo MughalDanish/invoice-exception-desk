@@ -75,6 +75,20 @@ def snapshot_invoice(session, invoice) -> InvoiceSnapshot:
         documents=capture_documents(session, invoice),
         retrieval=capture_retrieval(session, invoice),
         currency=currency,
+        extracted_fields={
+            k: invoice.current_data.get(k)
+            for k in (
+                "invoice_number",
+                "supplier_name",
+                "invoice_date",
+                "due_date",
+                "currency",
+                "subtotal",
+                "tax_amount",
+                "total",
+                "purchase_order_number",
+            )
+        },
         blockers=tuple(
             RuleEvidence(
                 id=rule.id,
@@ -120,6 +134,8 @@ def matches(invoice, run, session) -> bool:
 def view(run, invoice, session) -> InvestigationView:
     current = matches(invoice, run, session)
     status = "STALE" if not current and run.status != "CANCELLED" else run.status
+    if status == "COMPLETED" and (run.report or {}).get("termination_code"):
+        status = "FAILED"
     applicable = current and status == "COMPLETED"
     return InvestigationView(
         run_id=run.id,
@@ -133,12 +149,20 @@ def view(run, invoice, session) -> InvestigationView:
         else None,
         error_code=run.error_code,
         execution="durable_worker"
-        if run.provider_version == "scripted-durable-v4"
+        if run.provider_version in ("scripted-durable-v4", "gemini-mcp-v1")
         else "synchronous_local",
     )
 
 
-def start_investigation(session, invoice_id: uuid.UUID, body: InvestigationRequest, actor: str):
+def start_investigation(
+    session,
+    invoice_id: uuid.UUID,
+    body: InvestigationRequest,
+    actor: str,
+    *,
+    settings=None,
+    principal=None,
+):
     with session.begin():
         invoice = locked_invoice(session, invoice_id)
         existing = session.scalar(
@@ -160,6 +184,17 @@ def start_investigation(session, invoice_id: uuid.UUID, body: InvestigationReque
         if invoice.revision != body.expected_revision:
             raise AppError(409, "STALE_REVISION", "Invoice changed; reload before investigation")
         snapshot = snapshot_invoice(session, invoice)
+        live = settings is not None and settings.investigation_mode == "gemini"
+        if live and (
+            principal is None
+            or not settings.gemini_model.strip()
+            or not settings.gemini_api_key.get_secret_value()
+        ):
+            raise AppError(
+                503,
+                "INVESTIGATION_NOT_CONFIGURED",
+                "Live investigation requires a configured model and operator session",
+            )
         run = InvestigationRun(
             id=uuid.uuid4(),
             invoice_id=invoice.id,
@@ -168,10 +203,15 @@ def start_investigation(session, invoice_id: uuid.UUID, body: InvestigationReque
             validation_batch_id=snapshot.validation_batch_id,
             idempotency_key=body.idempotency_key,
             status="QUEUED",
-            mode="mock",
-            provider_version="scripted-durable-v4",
-            policy_version="days-9-12-v1",
+            mode="gemini" if live else "mock",
+            provider_version="gemini-mcp-v1" if live else "scripted-durable-v4",
+            policy_version="live-mcp-policy-v1" if live else "days-9-12-v1",
             requested_by=actor,
+            requested_user_id=principal.id if live else None,
+            requested_session_id=principal.session_id if live else None,
+            budget_metadata={"model": settings.gemini_model, "prompt_version": "live-v2-evidence-root"}
+            if live
+            else {},
             snapshot=snapshot.model_dump(mode="json"),
         )
         session.add(run)

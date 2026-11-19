@@ -1,5 +1,11 @@
 # Architecture and milestone decisions
 
+Days 13–14 implementation extends the historical mock milestones below with an
+opt-in Gemini/MCP path and investigation UI. See the actual verification and limits
+in [Day 13](day-13-progress.md), [Day 14](day-14-progress.md), and the accepted
+[integration design](phase-2/DAY_13_LIVE_INVESTIGATION_PLAN.md). Defaults remain mock;
+source changes do not activate new code in running containers.
+
 FastAPI is a modular monolith. PostgreSQL owns application state. Private files
 are stored under UUID names on a dedicated local directory/volume. The dashboard
 and integrations call the API; no integration owns business rules.

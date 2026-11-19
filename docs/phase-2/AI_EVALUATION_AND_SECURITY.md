@@ -4,10 +4,37 @@
 - AI cannot modify invoices, suppliers, policy, approvals or ledger; no mutation tool exists. Operator edits use existing expected revision workflow; fresh deterministic validation and existing approval hash binding remain required.
 - Reports are tied to revision, payload hash, validation batch and evidence versions. A stale report cannot represent current facts. Existing unique ledger/business keys and row/advisory locks remain unchanged.
 - Treat invoices, emails, retrieved text and model output as untrusted. Never execute instructions in evidence; allowlisted tools with strict schemas and server-derived scope, parameterized SQL, bounded reads, no external browsing, no arbitrary file access. Reject unknown tool/action names and spoofed IDs. Render plain escaped text; no model-generated HTML.
-- Do not expose secrets, full prompts, raw model output or real financial documents in logs or external traces. Synthetic data only; live keys in env, explicit opt-in. No real ERP or payment. Existing local Basic auth is not production auth. Public read-only routes must not run models or reveal private files. Keep integration key separate.
+- Do not expose secrets, full prompts, raw model output or real financial documents in logs or external traces. Synthetic data only; live keys in env, explicit opt-in. No real ERP or payment. Existing authentication uses HttpOnly JWT cookies and PostgreSQL sessions; preserve CSRF, rotation and revocation. Public read-only routes must not run models or reveal private files. Keep integration key separate.
 - Enforce limits at execution boundary, not in prompt alone. Treat model critic as probabilistic; code validates schemas, evidence existence, numeric facts and action allowlist. Missing evidence is a supported outcome. Human reviews semantic support; no certification claims.
 
 ## Dataset and evaluation protocol
+
+### Revised Day 13 live acceptance
+
+The [Day 13 plan](DAY_13_LIVE_INVESTIGATION_PLAN.md) adds required causal live
+evidence tests: actual configured Gemini -> actual stdio MCP -> typed results ->
+Gemini follow-up -> structured report, with two distinct tools and at least two
+model turns separated by evidence. Withhold a randomized synthetic fact from the
+initial prompt; require its correct use and source citation. A paired changed-
+evidence run must change the relevant conclusion/uncertainty. A disconnected MCP
+must fail/abstain. Tool-looking JSON, prefilled snapshots and mocked model output
+do not satisfy live acceptance. Record all attempts; no cherry-picked success.
+
+Before live activation, implement session-bound restricted delegation, immutable
+run evidence, delivered-citation membership, typed exact monetary assertions,
+mandatory coverage and source freshness, purpose/audience/fence checks, bounded
+process lifecycle, injection/unsupported-claim tests and persistent budgets across
+restarts. Do not store login tokens in queued jobs. Revocation must stop further
+tool calls and publication. Read-only tools are application enforcement, not proof
+of DB-role/OS isolation. Treat a model critic as probabilistic and correlated with
+the generator, never a bypass for deterministic rejection.
+
+Per-call metadata must distinguish model steps, HTTP retries, tool calls/cache
+hits, repair and worker resume; include usage/unknown reservations, latency and
+sanitized failures without payloads. No reasoning logs/external traces. Minimal
+opaque protocol signatures needed for resume stay private, distinct from telemetry.
+Prior regression counts do not prove live quality. Day 15 retains held-out quality
+and baseline comparisons; Day 13 must already satisfy live safety and observability.
 Keep original 16 fixtures and hash answer keys intact. New synthetic corpus versioned independently: clean/control, wrong totals, changed-byte duplicates, unapproved vendor, amount outlier, PO amendments, missing goods receipts, contradictory emails, insufficient evidence, stale revisions, adversarial documents. Generate about 100 labeled cases if feasible; record seed, exact counts and provenance. Label expected blocker, mandatory tools, acceptable action set, evidence IDs, forbidden claims. Separate development examples from frozen held-out cases by scenario family where feasible; no answers in model context or retrieval index. Human review a sample of semantic labels. Compare deterministic rules-only baseline, single LLM with tools, and graph approach under equivalent evidence and budgets. Report failures, denominators, model/provider versions, prompts and cost; mock scores measure execution not AI reasoning.
 
 | Metric | Definition | Aspirational target, not result |

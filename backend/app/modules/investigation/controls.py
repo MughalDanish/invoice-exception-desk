@@ -8,7 +8,7 @@ from app.modules.investigation.queue import MAX_ATTEMPTS, database_now, event
 from app.modules.investigation.service import locked_invoice, matches, view
 
 
-def control(session, run_id, actor, action):
+def control(session, run_id, actor, action, *, principal=None):
     with session.begin():
         initial = session.get(InvestigationRun, run_id)
         if initial is None:
@@ -26,7 +26,7 @@ def control(session, run_id, actor, action):
                 "INVESTIGATION_OWNER_REQUIRED",
                 "Only the requesting operator can control this run",
             )
-        if run.provider_version != "scripted-durable-v4":
+        if run.provider_version not in ("scripted-durable-v4", "gemini-mcp-v1"):
             raise AppError(409, "LEGACY_INVESTIGATION", "Start a new investigation for legacy runs")
         now = database_now(session)
         if action == "cancel":
@@ -36,6 +36,16 @@ def control(session, run_id, actor, action):
                 raise AppError(409, "INVESTIGATION_TERMINAL", "Investigation is already terminal")
             run.status, run.cancel_requested, run.finished_at = "CANCELLED", True, now
         else:
+            if run.mode == "gemini" and (
+                principal is None
+                or principal.id != run.requested_user_id
+                or principal.session_id != run.requested_session_id
+            ):
+                raise AppError(
+                    403,
+                    "INVESTIGATION_SESSION_REQUIRED",
+                    "Start a new investigation from the current operator session",
+                )
             if run.status != "FAILED" or run.attempts >= MAX_ATTEMPTS:
                 raise AppError(
                     409,
