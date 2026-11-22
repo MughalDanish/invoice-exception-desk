@@ -2,6 +2,14 @@
 
 Catch invoice mistakes before they reach your ledger.
 
+Days 13–14 add an opt-in live Gemini investigator using authenticated local MCP
+tools, persistent budgets and an advisory investigation tab. Offline tests and
+development still default to scripted mock mode. Verification and live limitations
+are recorded in [Day 13](docs/day-13-progress.md) and [Day 14](docs/day-14-progress.md);
+learning guides explain the [backend](docs/learning-day-13.md) and
+[frontend](docs/learning-day-14.md). These changes do not automatically update
+running containers, enable paid investigation or change financial authority.
+
 An invoice exception-management demonstration using synthetic invoices.
 Days 1–5 implement ingestion, extraction, validation, human review, safe ledger posting,
 audit history, CSV export, the dashboard, optional n8n intake and a read-only portfolio mode.
@@ -39,13 +47,60 @@ benchmark, public write-denial tests, deployment configurations, screenshots,
 silent walkthrough and owner learning notes. PostgreSQL remains authoritative for
 the writable workflow; the public process serves only a curated fixture export.
 
-Actual cloud deployment remains pending owner access/authorization. Gemini's request construction and
-failure handling are tested offline with the real SDK and a fake HTTP transport;
-live extraction has not been verified. Gmail and Telegram require account credentials.
+Actual cloud deployment remains pending owner access/authorization. Live Gemini
+extraction and Gmail-to-Slack intake were verified locally during Phase 1 follow-up.
+Automated regression tests use synthetic fixtures and fake SDK transports; Day 6
+does not run live model calls or send notifications.
 
 The Phase 2 documents are preserved in [docs/phase-2](docs/phase-2/AI_UPGRADE_START_HERE.md).
-The next milestone is Day 6 (typed investigation contracts and one mock graph),
-which has not been implemented and requires separate confirmation.
+Day 6 adds an advisory-only LangGraph mock investigation with strict typed contracts,
+snapshot-bound reports, an additive migration and operator-authenticated API routes.
+Day 7 extends it with a validated mock supervisor, sequential financial/supplier
+roles and five scoped read-only tools for totals, duplicates, supplier approval and
+amount outliers. It describes captured evidence without changing financial records.
+Unknown blockers and missing evidence remain explicit limitations.
+See [Day 6 learning guide](docs/learning-day-6.md) and
+[milestone results](docs/day-6-progress.md). Current results and concepts are in the
+[Day 7 report](docs/day-7-progress.md) and [learning guide](docs/learning-day-7.md).
+Day 8 adds parallel financial/supplier/document branches with an explicit join,
+a versioned append-only supporting-evidence table, scoped bounded capture and a
+synthetic PO/receipt/email corpus. The document branch inventories missing evidence;
+it does not reconcile text or grant financial authority. See the
+[Day 8 report](docs/day-8-progress.md) and [learning guide](docs/learning-day-8.md).
+Days 9?12 add scoped exact SQL/full-text retrieval with versioned evidence links,
+a bounded resolution writer/critic, a local read-only MCP stdio adapter and durable
+PostgreSQL-backed investigation execution. Investigation POST now returns `QUEUED`;
+a separate worker process of the same backend resumes its checkpoint and publishes
+only current, authorized advisory results. No AI approval or posting is added.
+See [Days 9?12 integration results](docs/days-9-12-progress.md),
+[Day 12 progress](docs/day-12-progress.md) and [worker learning guide](docs/learning-day-12.md).
+Days 13 and 14 add the opt-in live Gemini/MCP provider and investigation UI.
+See the current milestone reports for verification results and limitations;
+scripted mock remains the safe default. Day 15 requires separate confirmation.
+
+Run the isolated synthetic example (existing local PostgreSQL must be running):
+
+```powershell
+.venv/Scripts/python.exe -m pip install -r backend/requirements.txt
+.venv/Scripts/python.exe scripts/run_investigation_demo.py
+.venv/Scripts/python.exe scripts/run_routing_demo.py
+.venv/Scripts/python.exe scripts/run_parallel_demo.py
+```
+
+The example creates and removes its own schema and writes only a synthetic report
+to ignored `storage/day-6-synthetic-report.json`. No API key or live model is used.
+It does not update the running containers. To enable these new routes on your local
+backend, build its image and run Alembic before starting the updated backend:
+
+```powershell
+docker compose build backend
+docker compose run --rm --no-deps backend python -m alembic upgrade head
+docker compose up -d --no-build --no-deps backend
+```
+
+The routing demo writes four synthetic reports to `storage/day-7-synthetic-reports.json`.
+This milestone has no investigation screen, parallel workers, retrieval corpus or durable worker.
+Existing invoice controls and n8n intake remain independent of investigations.
 
 ## Day 5 results and public preview
 
@@ -367,9 +422,10 @@ that disagree with the document; approval records a human decision, not authenti
 ## Limits
 
 Synthetic demonstration only. No cloud/public deployment has been performed.
-The public-mode configuration is read-only; Basic auth is for the private local
-operator. Integration intake instead requires
-`X-Integration-Key` and `Idempotency-Key`; all operator routes retain Basic auth.
+The public-mode configuration is read-only. Private operators use Argon2id-backed
+login with HttpOnly JWT cookies, PostgreSQL sessions, refresh rotation and CSRF
+protection. Integration intake instead requires `X-Integration-Key` and
+`Idempotency-Key`; those keys do not grant operator access.
 Windows filesystem permissions
 inherit from the local account; POSIX modes also restrict files in Linux containers.
 Normal DB failures clean up new files; crash recovery for orphaned files is pending.
@@ -401,3 +457,77 @@ The supplied requirements are preserved in `docs/PROJECT_SPEC.md` and
 `.env.example` contains placeholders only. Use the setup helper or copy it to `.env`
 and replace all `CHANGE_ME` values. Never commit real secrets
 or client documents.
+
+
+## Durable investigation worker (Days 9?12)
+
+After installing the pinned backend requirements and applying migrations:
+
+```powershell
+.venv/Scripts/python.exe scripts/dev.py migrate
+.venv/Scripts/python.exe scripts/dev.py worker --setup-only
+.venv/Scripts/python.exe scripts/dev.py worker
+```
+
+The worker initializes the official PostgreSQL checkpoint schema using its supported
+setup API. No Redis or Celery is required. For Docker, build the matching backend
+image, migrate it, then enable the optional worker profile:
+
+```powershell
+docker compose build backend
+docker compose run --rm --no-deps backend python -m alembic upgrade head
+docker compose --profile dashboard --profile automation --profile investigation up -d --no-build
+```
+
+Authenticated POST `/api/v1/invoices/{id}/investigations` enqueues the captured
+revision. Poll GET `/api/v1/investigations/{run_id}` every 2?5 seconds with backoff,
+stopping at a terminal status. Creator-only cancel/retry controls require the same
+session and CSRF protection as existing operator actions. A newer invoice or source
+version requires a new investigation. Reports contain authenticated, version-bound
+`evidence_links`; their source excerpts remain untrusted advisory evidence.
+
+The worker image must match the migrated API code. Existing local containers are
+not updated merely by changing repository files. The original n8n workflow still
+handles intake and notifications; it does not automatically start investigations
+or post anything to the ledger.
+
+## Live investigation and investigation UI (Days 13–14)
+
+In private mode, open a review invoice with current validation and select the
+**Investigation** tab. Start a run, inspect its progress, source citations and
+uncertainties, or cancel/retry when the server permits. Findings are advisory;
+the existing financial review controls remain separate. Public demo mode cannot
+start investigations or read private investigation/evidence endpoints.
+
+To opt into paid Gemini investigation, set `INVESTIGATION_MODE=gemini` alongside
+the existing `GEMINI_API_KEY` and `GEMINI_MODEL` on both API and worker. This is
+independent of `AI_MODE`, which controls extraction. Never put keys in frontend
+environment variables. `scripts/dev.py worker` now respects configured live jobs;
+the test command still strips provider keys and forces offline mock defaults.
+
+Install `backend/requirements.txt`, apply migration `0010_live_investigation`, and
+initialize the worker checkpoints before starting the matching API and worker.
+For containers, build **both backend and frontend**, migrate with the new backend
+image and start the dashboard/automation/investigation Compose profiles. Back up
+the existing database first; preserve PostgreSQL, n8n and invoice-file volumes.
+No extra MCP container or public listener is needed: the worker owns a local
+stdio subprocess in the same backend image.
+
+Live defaults: eight logical model steps, twelve generation HTTP attempts, twelve
+tool requests, two maximum repairs, 24,000 cumulative tokens and a 180-second
+deadline from first claim. The deadline includes retry/recovery downtime as a
+conservative bound. Network calls are capped at sixty seconds, MCP calls at ten, with a separate twenty-second startup allowance;
+unknown usage retains its reservation. Budgets survive retries and restarts.
+No exact billing cap or exactly-once model request guarantee is claimed.
+
+The explicitly paid synthetic verification command is:
+
+```powershell
+.venv/Scripts/python.exe scripts/run_live_investigation_smoke.py --run-paid-synthetic
+```
+
+It creates/removes its own random QA schema, uses mock extraction and genuine
+Gemini investigation, checks versioned MCP evidence and compares changed evidence.
+It never seeds an invented PO into an application invoice. Full results and any
+failed attempts must be read in the milestone report; one pair is not an accuracy
+benchmark. The next milestone remains Day 15, requiring owner authorization.

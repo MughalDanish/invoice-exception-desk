@@ -221,3 +221,91 @@ class AuthLoginWindow(Base):
     key_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     attempts: Mapped[int] = mapped_column(Integer)
+
+
+class InvestigationRun(IdentityMixin, Base):
+    __tablename__ = "investigation_runs"
+    __table_args__ = (
+        UniqueConstraint("invoice_id", "idempotency_key", name="uq_investigation_request"),
+        CheckConstraint("revision >= 1", name="investigation_positive_revision"),
+        CheckConstraint(
+            "status IN ('QUEUED', 'RUNNING', 'COMPLETED', 'FAILED', 'CANCELLED', 'STALE')",
+            name="investigation_status",
+        ),
+        CheckConstraint("mode IN ('mock','gemini')", name="investigation_mock_only"),
+        Index("ix_investigation_invoice_created", "invoice_id", "created_at"),
+        Index("ix_investigation_queue", "status", "available_at", "lease_until"),
+    )
+
+    invoice_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("invoices.id"))
+    revision: Mapped[int] = mapped_column(Integer)
+    payload_sha256: Mapped[str] = mapped_column(String(64))
+    validation_batch_id: Mapped[uuid.UUID] = mapped_column(Uuid)
+    idempotency_key: Mapped[str] = mapped_column(String(100))
+    status: Mapped[str] = mapped_column(String(20))
+    mode: Mapped[str] = mapped_column(String(10))
+    provider_version: Mapped[str] = mapped_column(String(80))
+    policy_version: Mapped[str] = mapped_column(String(40))
+    requested_by: Mapped[str] = mapped_column(String(200))
+    requested_user_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, nullable=True)
+    requested_session_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, nullable=True)
+    budget_metadata: Mapped[dict] = mapped_column(
+        JSONB, default=dict, server_default=text("'{}'::jsonb")
+    )
+    snapshot: Mapped[dict] = mapped_column(JSONB)
+    report: Mapped[dict | None] = mapped_column(JSONB)
+    error_code: Mapped[str | None] = mapped_column(String(80))
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    lease_owner: Mapped[str | None] = mapped_column(String(100))
+    lease_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    fence: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    attempts: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    available_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    cancel_requested: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default=text("false")
+    )
+    event_seq: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+
+
+class InvestigationEvent(IdentityMixin, Base):
+    __tablename__ = "investigation_events"
+    __table_args__ = (UniqueConstraint("run_id", "seq", name="uq_investigation_event_seq"),)
+    run_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("investigation_runs.id"), index=True)
+    seq: Mapped[int] = mapped_column(Integer)
+    event_type: Mapped[str] = mapped_column(String(40))
+    details: Mapped[dict] = mapped_column(JSONB, default=dict)
+
+
+class InvestigationToolResult(IdentityMixin, Base):
+    __tablename__ = "investigation_tool_results"
+    __table_args__ = (UniqueConstraint("run_id", "tool_name", name="uq_investigation_tool"),)
+    run_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("investigation_runs.id"), index=True)
+    tool_name: Mapped[str] = mapped_column(String(80))
+    result: Mapped[dict] = mapped_column(JSONB)
+
+
+class InvestigationDocument(Base):
+    """Versioned, append-only supporting evidence. No financial authority."""
+
+    __tablename__ = "investigation_documents"
+    __table_args__ = (
+        CheckConstraint("version >= 1", name="evidence_positive_version"),
+        CheckConstraint("kind IN ('PO', 'RECEIPT', 'EMAIL')", name="evidence_kind"),
+        CheckConstraint("length(content) BETWEEN 1 AND 1000", name="evidence_size"),
+        Index("ix_evidence_scope", "invoice_id", "supplier_key", "source_id", "version"),
+        Index(
+            "ix_evidence_fts",
+            text("to_tsvector('english'::regconfig, content)"),
+            postgresql_using="gin",
+        ),
+    )
+
+    source_id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True)
+    version: Mapped[int] = mapped_column(Integer, primary_key=True)
+    invoice_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("invoices.id"))
+    supplier_key: Mapped[str] = mapped_column(String(200))
+    kind: Mapped[str] = mapped_column(String(10))
+    content: Mapped[str] = mapped_column(Text)
+    content_sha256: Mapped[str] = mapped_column(String(64))

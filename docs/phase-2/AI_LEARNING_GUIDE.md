@@ -11,12 +11,18 @@ Codex must not merely ship code. At each milestone explain the actual changed co
 | 10 | Critic loops, abstention, deterministic guards | Inject an unsupported claim and inspect rejection |
 | 11 | MCP resources/tools, trust boundaries | Call a read-only tool with valid and invalid arguments |
 | 12 | Checkpoints, leases, fencing, at-least-once execution | Kill worker mid-run, resume, explain why exactly-once is not guaranteed |
-| 13 | Token budgets, model routing, latency and costs | Calculate cost using actual usage and compare two runs |
+| 13 | Live Gemini function calling, MCP host/client/server, evidence grounding, signature-safe checkpoints, persistent budgets and telemetry | Trace a model-selected call through stdio MCP; change a withheld synthetic fact and explain the changed report; calculate observed/unknown usage across retry/resume |
 | 14 | Prompt injection, least privilege, stale-state safety | Write malicious evidence and prove no ledger changes |
 | 15 | Ground truth, eval leakage, regression, traces | Label five unseen cases and inspect false positives |
 | 16 | Deployability, engineering communication | Explain architecture and demo without reading script |
 
 ## Interview checks
+
+For revised Day 13, use the [live integration plan](DAY_13_LIVE_INVESTIGATION_PLAN.md).
+Explain why a model with every fact prefilled is not proof of tool investigation;
+why a valid citation is not semantic truth; why SDK auto-calling plus a host loop
+duplicates control; how logout revokes queued delegation; why opaque signatures
+are different from storing hidden reasoning; and why retries must not reset budget.
 Explain when normal code is superior to an agent; why a graph is not necessarily autonomous; how parallel state merges stay deterministic; why vector retrieval cannot replace exact invoice identity; how citations differ from proof; why LLM critics do not certify correctness; why checkpointing does not provide exactly-once effects; how a revision-bound approval prevents stale writes; how to measure improvement over a single LLM; how to protect tools from prompt injection; how to scale PostgreSQL workers before introducing a broker.
 
 ## Portfolio positioning

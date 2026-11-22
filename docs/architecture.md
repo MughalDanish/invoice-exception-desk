@@ -1,5 +1,11 @@
 # Architecture and milestone decisions
 
+Days 13–14 implementation extends the historical mock milestones below with an
+opt-in Gemini/MCP path and investigation UI. See the actual verification and limits
+in [Day 13](day-13-progress.md), [Day 14](day-14-progress.md), and the accepted
+[integration design](phase-2/DAY_13_LIVE_INVESTIGATION_PLAN.md). Defaults remain mock;
+source changes do not activate new code in running containers.
+
 FastAPI is a modular monolith. PostgreSQL owns application state. Private files
 are stored under UUID names on a dedicated local directory/volume. The dashboard
 and integrations call the API; no integration owns business rules.
@@ -185,5 +191,157 @@ Updating it is an explicit export/review/redeploy operation. It survives sleepin
 free hosts without persisting confidential uploads. Neon is optional for a future
 private cloud database, not required merely to serve this portfolio projection.
 
-No investigation/agent state exists yet. Phase 2 starts with Day 6 only after
-separate authorization, retaining this tested baseline and advisory-only policy.
+## Phase 2 Day 6: advisory investigation foundation
+
+`modules/investigation` adds a fixed LangGraph sequence:
+
+```mermaid
+flowchart LR
+  Auth[Operator cookie + CSRF] --> Capture[Short transaction: capture snapshot / save run]
+  Capture --> Graph[Snapshot -> mock findings -> guarded advisory report]
+  Graph --> Publish[Short transaction: refresh locked invoice / check applicability]
+  Publish --> Report[COMPLETED report or STALE / FAILED]
+```
+
+The graph receives frozen, bounded Pydantic data rather than a database session or
+ORM objects. It has no network access or mutation tools. Only recorded
+`TOTAL_MISMATCH` expected/observed amounts are explained. Other blockers produce
+`INSUFFICIENT` findings. A deterministic guard requires one exact supported output
+per snapshot blocker; a model critic is not implemented yet.
+
+Migration `0006_investigation` adds only `investigation_runs`. It stores a minimal
+snapshot, input identity, provider/policy versions, requester, status and report.
+The request key is unique per invoice; an old key cannot bind to changed input.
+This stronger key scope detects conflicts even across validation batches.
+Run status is a checked string, separate from the unchanged financial state machine.
+
+POST `/api/v1/invoices/{id}/investigations` accepts an expected revision and
+idempotency key. GET `/api/v1/investigations/{id}` rechecks applicability.
+Both require the existing operator session; POST requires CSRF. Integration keys
+cannot invoke them. The public app registers neither route and still constructs
+no database engine. No private report is exposed publicly.
+
+POST returns 202 with an explicit `execution=synchronous_local` marker. In this
+milestone the bounded, offline three-node graph completes within the request;
+202 is retained for the planned enqueue contract. It is not background execution.
+No DB transaction is held while the graph runs. On completion a fresh locked read
+checks revision, payload hash, validation batch, document hash and review status.
+Stale reports are suppressed on reads; historical stored content is preserved.
+
+LangGraph is pinned to 1.2.22 with resolved dependencies. Its transitive LangSmith
+package does not enable tracing: execution explicitly disables it, even if host
+tracing environment variables are present. No Gemini extraction changes are needed.
+Interrupted RUNNING records have no recovery yet; durable checkpointing and workers
+remain Day 12. UI integration is Day 14. See the Day 6 report and learning guide.
+
+## Phase 2 Day 7: validated supervisor and scoped tools
+
+The investigation module now adds a mock supervisor and conditional dispatch loop.
+`routing.py` derives required tasks from blocker codes; the proposed plan can
+reorder tasks but cannot omit checks, change ownership or introduce tools.
+`graph.py` executes financial and supplier roles sequentially, merges by stable
+rule/task IDs and checks every finding against captured evidence. The report still
+requests evidence; it cannot approve, correct or post anything.
+
+`lookups.py` captures bounded exact SQL evidence under server-derived invoice and
+normalized supplier identity. It filters duplicates by supplier plus invoice number
+and history by supplier plus currency. `tools.py` exposes five explicit operations
+over that frozen projection, with strict schemas and scope checks. Neither provider
+nor tool receives a Session, arbitrary SQL, filesystem path or network client.
+Distinct reads are cached per run and bounded to 12 calls (five currently available).
+
+Snapshots now optionally include supplier policy, up to 20 active duplicate
+candidates, up to 20 matching ledger facts and up to 20 recent same-currency ledger
+facts. Truncation is explicit. Finalization and GET compare this evidence as well as
+the original revision/hash/batch/source guards. Capturing the whole small read set
+is intentionally conservative: changes to even an unused captured source may stale
+a report. These checks are advisory freshness safeguards, not transactionally
+serializable financial authority; the existing posting transaction remains separate.
+
+Plans, used tool names and a lookup digest are additive report fields. Day 6 records
+without them remain readable, with their original evidence semantics. No migration,
+new dependency, financial-schema change, public route or frontend integration is
+introduced. LangGraph/provider tracing stays disabled and investigation mode is
+still scripted mock. Parallel execution and a synthetic PO/receipt/email corpus
+remain Day 8; advanced retrieval remains Day 9.
+
+
+## Phase 2 Day 8: parallel investigators and versioned evidence
+
+The Day 7 sequential dispatch loop is superseded by three parallel role nodes and
+an explicit AND join. Mandatory blocker routes remain enforced; new snapshots also
+require a document inventory task. Empty role nodes are no-ops. Findings merge by
+stable task ID with conflict rejection and deterministic ordering. Tools are
+captured once before fan-out, so no Session or mutable cache is shared by workers.
+
+Migration `0007_investigation_documents` adds only supporting evidence. Source UUID
+and positive version form its primary key. UPDATE/DELETE triggers retain history.
+Capture filters by invoice UUID AND normalized supplier, selects the latest source
+versions, and bounds the read set to 12 with explicit truncation. Immutable snapshot
+validation checks identities and content digests. Source changes in the visible read
+set stale reports on finalization/GET. Earlier snapshots retain their original semantics.
+
+The mock document investigator inventories kinds and always requests human review;
+it does not infer financial truth from document text. No ingestion API, real email
+import, hybrid search, live model, UI change, approval or posting capability was added.
+The synthetic corpus is loaded only in a disposable demo schema. See Day 8 progress
+and learning notes for commands, actual results and limitations. Day 9 remains gated.
+
+
+## Phase 2 Days 9?12: grounded reports and durable advisory execution
+
+`modules/evidence` adds exact invoice-identity SQL and PostgreSQL English FTS over
+latest immutable supporting-source versions. A materialized CTE filters by BOTH
+invoice UUID and normalized supplier before ranking. Fraction-based reciprocal rank
+fusion is deterministic. Twelve results per ranking bound the read set; truncation
+is explicit. pgvector was unavailable and is not simulated. The tiny development
+comparison measures lexical coverage, not live AI quality or a large-corpus ranking SLO.
+A private operator-authenticated resolver returns exact historical versions. Snapshot
+scope/hash validation and fresh retrieval comparisons invalidate stale reports.
+
+The financial/supplier/document branches still merge through a conflict-rejecting
+reducer. Document tasks now include scoped evidence search. Reports include exact
+source citations and links. A writer then produces a strict structured draft; the
+critic cannot override deterministic checks of supported claims, exact monetary
+strings, source binding, citations, action allowlist and explicit gaps. At most two
+repairs follow the initial draft. Exhaustion returns a human-evidence request,
+never financial authority. The current provider remains scripted mock.
+
+Optional MCP is a local newline-framed JSON-RPC stdio transport, with initialization,
+ping, tools/list and tools/call. The trusted host fixes invoice scope; tools accept
+no model scope/SQL/path arguments. Existing revocable JWT sessions are checked per
+request. It has no public listener, browser credential broker or separate account.
+
+Day 12 supersedes synchronous investigation POST. The endpoint commits a QUEUED run
+and returns 202 without graph execution. Existing completed legacy runs remain
+readable with their old execution marker. New jobs use a separate worker process
+of the same backend image via the optional `investigation` Compose profile.
+
+Migration `0009` extends advisory run rows with lease owner/deadline, fencing generation,
+attempts, availability, cancellation and event sequence. It adds investigation_events
+and investigation_tool_results; no financial table changes. A short SKIP LOCKED
+transaction claims work. A dedicated psycopg connection holds the per-run session
+advisory lock AND performs official PostgresSaver writes, so concurrent resume is
+excluded even if another worker fences an expired lease. Independent heartbeats
+renew only unexpired ownership. SDK setup uses nonblocking advisory-lock attempts;
+a blocking lock SELECT can deadlock with its concurrent-index migrations.
+
+The supported PostgresSaver 3.2.1 / psycopg-pool 3.3.3 packages are pinned without changing
+existing pins. SDK checkpoint tables have their own supported setup lifecycle,
+separate from Alembic financial/advisory migrations. A closed tagged-JSON serializer
+uses only registered local contracts, validates decoded models, and cannot import
+arbitrary classes or load pickle. Stable thread IDs bind checkpoints to run UUIDs.
+Workers checkpoint synchronously between supersteps and persist deduplicated tool
+results. Read calls may repeat across some crash boundaries: exactly-once execution
+or exactly-once model billing is not claimed.
+
+Final publication locks invoice then run, checks owner/fence/unexpired lease, current
+revision/hash/batch/source read sets, and never modifies invoice/approval/ledger data.
+Cancellation advances the fence immediately; in-flight nodes may finish but cannot
+publish. Recognized transient failures get bounded exponential backoff and at most
+three job attempts. Critic repair counters persist separately. The 90-second active
+execution limit is cooperative between nodes; future blocking live calls need their
+own provider timeouts. Retry requires the requesting operator, remaining attempts
+and current input. Public mode registers no investigation/evidence mutation paths
+and creates no worker/DB engine. The original extraction, n8n, approval and posting
+workflows remain separate. See the implementation reports and learning guides.

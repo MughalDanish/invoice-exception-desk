@@ -1,5 +1,45 @@
 # Architecture and implementation contracts
 
+## Revised live integration contract — authorized Day 13
+
+The [Day 13 review/plan](DAY_13_LIVE_INVESTIGATION_PLAN.md) is authoritative for
+the authorized live path and replaces the earlier optional MCP/model wording below.
+The live path and Day 14 UI are implemented; actual verification outcomes are
+recorded in [Day 13](../day-13-progress.md) and [Day 14](../day-14-progress.md). Mock remains the
+default configuration; enabling Gemini is an explicit server setting.
+
+Retain the modular monolith, PostgreSQL worker/checkpointer and existing tools.
+Add a versioned live graph: mandatory objectives -> Gemini model step -> validated
+MCP calls -> returned evidence -> model step -> structured writer -> critic ->
+deterministic final gate. One bounded live session initially covers all roles;
+parallel model role sessions are optional later. Existing mock graphs/checkpoints
+remain runnable. Dynamic calls must not be replaced by supervisor prefetching.
+
+Use a verified pinned official MCP client with the existing local stdio server.
+The host manually translates allowlisted tool declarations and executes Gemini
+function requests; disable SDK automatic calls/retries to avoid two competing
+loops. Reuse Google Gen AI `generate_content`; separate evidence gathering from
+tools-disabled structured output to reduce model/schema coupling. Preserve
+required opaque signatures in validated bounded local protocol state, not SDK
+objects or hidden reasoning text. Test compatibility with installed SDK versions.
+
+Add authenticated session/user binding to live enqueue and a purpose/audience-
+restricted short-lived run capability for the MCP child. Recheck active session,
+invoice/run/snapshot/fence binding, cancellation and applicability for calls and
+publication. Store no browser tokens; legacy username-only runs stay mock-only.
+Run-mode tools serve frozen snapshots with actual typed facts and source excerpts;
+only delivered evidence can be cited. A current-data recapture cannot be mixed
+into a durable report. Additive investigation migrations widen mock-only mode
+constraints and record provider/policy/prompt/graph versions and budget/call state.
+
+Fenced persistent run-wide budgets cover every model/network/tool attempt, repair
+and resume. Proposed live defaults are 8 logical model steps, 12 HTTP attempts,
+12 tool requests, 2 repairs, 180 seconds cumulative active time, 60 seconds maximum
+per model request and 24,000 input/output/thinking tokens with conservative
+reservations. These replace the suggested 90-second/12,000-token mock-era example
+below for live mode only. No new broker, remote listener or financial write tool.
+Full policies, trade-offs, planned migrations and acceptance gates are in the plan.
+
 ## Layout
 Add `backend/app/modules/investigation/` (schemas, graph, providers, tools, service, worker, routes), `backend/app/modules/evidence/` (synthetic ingestion, search, provenance), tests and additive Alembic migrations. Match actual repository conventions after inspection. Keep n8n intake independent and Next.js static export; use existing detail query route and authenticated API polling with backoff. No WebSockets required.
 

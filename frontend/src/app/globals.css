@@ -1085,11 +1085,14 @@ footer {
   overflow: hidden;
 }
 .review-tabs {
+  min-width: 0;
+  overflow-x: auto;
   padding: 0 16px;
   border-bottom: 1px solid #d5ded8;
   background: #fbfcf9;
 }
 .review-tabs [data-slot="tabs-list"] {
+  min-width: max-content;
   height: 49px;
   gap: 14px;
 }
@@ -1993,6 +1996,21 @@ footer {
 .review-pane > [data-slot="tabs"] {
   gap: 0;
 }
+.review-pane {
+  container-type: inline-size;
+}
+@container (max-width: 520px) {
+  .review-tabs [data-slot="tabs-list"] {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-width: 0;
+    height: auto;
+    gap: 0;
+  }
+  .review-tabs [data-slot="tabs-trigger"] {
+    min-height: 36px;
+  }
+}
 .review-tabs [data-slot="tabs-list"] {
   width: 100%;
 }
@@ -2002,6 +2020,16 @@ footer {
 @media (max-width: 767px) {
   .review-tabs [data-slot="tabs-trigger"] {
     font-size: 11px;
+  }
+  .review-tabs [data-slot="tabs-list"] {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-width: 0;
+    height: auto;
+    gap: 0;
+  }
+  .review-tabs [data-slot="tabs-trigger"] {
+    min-height: 36px;
   }
   .metric-card p {
     font-size: 10px;

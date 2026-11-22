@@ -30,6 +30,7 @@ services:
       AUTH_COOKIE_SAMESITE: ${AUTH_COOKIE_SAMESITE:-lax}
       N8N_INTEGRATION_KEY: ${N8N_INTEGRATION_KEY:?Set N8N_INTEGRATION_KEY in .env}
       AI_MODE: ${AI_MODE:-mock}
+      INVESTIGATION_MODE: ${INVESTIGATION_MODE:-mock}
       PUBLIC_DEMO: "false"
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       GEMINI_MODEL: ${GEMINI_MODEL:-}
@@ -52,6 +53,23 @@ services:
       interval: 10s
       timeout: 6s
       retries: 5
+
+  investigation-worker:
+    profiles: [investigation]
+    image: invoice-exception-desk-backend
+    command: ["python", "-m", "app.modules.investigation.worker"]
+    restart: on-failure
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in .env}
+      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET:?Set AUTH_JWT_SECRET in .env}
+      PUBLIC_DEMO: "false"
+      AI_MODE: mock
+      INVESTIGATION_MODE: ${INVESTIGATION_MODE:-mock}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-}
+    depends_on:
+      backend:
+        condition: service_healthy
 
   frontend:
     profiles: [dashboard]

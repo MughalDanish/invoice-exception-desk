@@ -42,6 +42,7 @@ import {
 } from "@/features/invoices/queries";
 import { DocumentPreview } from "@/features/invoices/components/document-preview";
 import { InvoiceEditor } from "@/features/invoices/components/invoice-editor";
+import { InvestigationPanel } from "@/features/investigations/investigation-panel";
 export function InvoiceDetail() {
   const id = useSearchParams().get("id") || "";
   const { readOnly, inspect } = useDesk();
@@ -171,6 +172,7 @@ export function InvoiceDetail() {
                     Original extraction
                   </TabsTrigger>
                   <TabsTrigger value="activity">Activity history</TabsTrigger>
+                  <TabsTrigger value="investigation">Investigation</TabsTrigger>
                 </TabsList>
               </div>
               <TabsContent
@@ -253,6 +255,9 @@ export function InvoiceDetail() {
                   original={invoice.extracted_data}
                   current={invoice.current_data}
                 />
+              </TabsContent>
+              <TabsContent value="investigation" className="m-0">
+                <InvestigationPanel invoice={invoice} dirty={dirty} />
               </TabsContent>
               <TabsContent value="activity" className="m-0">
                 {audit.isPending ? (

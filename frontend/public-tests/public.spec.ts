@@ -16,6 +16,8 @@ test("anonymous synthetic demo is readable, immutable, and useful on mobile", as
   page,
 }) => {
   const errors: string[] = [];
+  const investigationRequests: string[] = [];
+  page.on("request", (request) => { if (request.url().includes("/investigations")) investigationRequests.push(request.url()); });
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/");
   await expect(
@@ -45,6 +47,11 @@ test("anonymous synthetic demo is readable, immutable, and useful on mobile", as
   await page.locator("tbody tr td").nth(1).click();
   await expect(page.getByLabel("Total", { exact: true })).toBeDisabled();
   await expect(page.getByTitle("Original source document")).toBeVisible();
+  await page.getByRole("tab", { name: "Investigation", exact: true }).click();
+  await expect(page.getByText(/Financial investigations are available only/)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Investigate exceptions", exact: true })).toHaveCount(0);
+  expect(investigationRequests).toEqual([]);
+  await page.getByRole("tab", { name: "Review invoice", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "Post to ledger" }),
   ).toHaveCount(0);

@@ -24,6 +24,7 @@ from sqlalchemy.orm import Session
 from alembic import command
 from app.core.config import Settings
 from app.main import create_app
+from app.modules.auth.bootstrap import bootstrap_operator
 from app.seed import seed_vendors
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -47,8 +48,8 @@ def isolated_client(url):
         with tempfile.TemporaryDirectory(prefix="ied-qa-") as folder:
             settings = Settings(
                 _env_file=None,
-                demo_basic_user=AUTH[0],
-                demo_basic_password=AUTH[1],
+                auth_jwt_secret="isolated-qa-signing-secret-at-least-32-bytes",
+                auth_cookie_secure=False,
                 ai_mode="mock",
                 gemini_api_key="",
                 gemini_model="",
@@ -58,7 +59,17 @@ def isolated_client(url):
             )
             with Session(engine) as session:
                 seed_vendors(session)
+                bootstrap_operator(session, *AUTH)
             with TestClient(create_app(settings, engine)) as client:
+                csrf = checked(client.get("/api/v1/auth/csrf"))["csrf_token"]
+                login = checked(
+                    client.post(
+                        "/api/v1/auth/login",
+                        headers={"X-CSRF-Token": csrf},
+                        json={"username": AUTH[0], "password": AUTH[1]},
+                    )
+                )
+                client.headers["X-CSRF-Token"] = login["csrf_token"]
                 yield client
     finally:
         engine.dispose()
@@ -77,7 +88,6 @@ def upload(client, name):
     return checked(
         client.post(
             "/api/v1/invoices/upload",
-            auth=AUTH,
             files={
                 "file": (name, (ROOT / "fixtures/invoices" / name).read_bytes(), "application/pdf")
             },
@@ -87,17 +97,36 @@ def upload(client, name):
 
 
 def process(client, invoice_id):
-    return checked(client.post(f"/api/v1/invoices/{invoice_id}/process", auth=AUTH))
+    return checked(client.post(f"/api/v1/invoices/{invoice_id}/process"))
 
 
 def detail(client, invoice_id):
-    return checked(client.get(f"/api/v1/invoices/{invoice_id}", auth=AUTH))
+    return checked(client.get(f"/api/v1/invoices/{invoice_id}"))
+
+
+def complete_synthetic_investigation(client, queued):
+    """Explicit demo worker step, allowed only inside this helper's disposable schema.
+
+    This does not intercept HTTP requests or change the public queued API contract.
+    """
+    from app.modules.investigation.worker import run_once
+
+    with client.app.state.engine.connect() as connection:
+        schema = connection.scalar(text("SELECT current_schema()"))
+    if not schema or not schema.startswith("ied_qa_"):
+        raise RuntimeError("Synthetic worker demo requires a disposable QA schema")
+    if queued["status"] != "QUEUED":
+        raise RuntimeError("Expected an enqueued synthetic investigation")
+    identifier = uuid.UUID(queued["run_id"])
+    run_once(client.app.state.session_factory, run_id=identifier)
+    result = checked(client.get(f"/api/v1/investigations/{identifier}"))
+    if result["status"] != "COMPLETED":
+        raise RuntimeError("Synthetic investigation worker did not complete")
+    return result
 
 
 def post(client, invoice_id, revision=1):
-    return client.post(
-        f"/api/v1/invoices/{invoice_id}/post", auth=AUTH, json={"expected_revision": revision}
-    )
+    return client.post(f"/api/v1/invoices/{invoice_id}/post", json={"expected_revision": revision})
 
 
 def percentile(samples, fraction):
@@ -114,7 +143,7 @@ def benchmark(url):
                 reference_id = upload(client, "clean-001.pdf")["invoice_id"]
                 process(client, reference_id)
                 checked(post(client, reference_id))
-            before = checked(client.get("/api/v1/ledger", auth=AUTH))["total"]
+            before = checked(client.get("/api/v1/ledger"))["total"]
             start = time.perf_counter()
             result = upload(client, name)
             invoice_id = result["invoice_id"]
@@ -127,7 +156,7 @@ def benchmark(url):
                 if not r["passed"] and r["severity"] == "BLOCKER"
             )
             attempt = post(client, invoice_id)
-            after = checked(client.get("/api/v1/ledger", auth=AUTH))["total"]
+            after = checked(client.get("/api/v1/ledger"))["total"]
             elapsed = round((time.perf_counter() - start) * 1000, 3)
             expected_hold = not name.startswith("clean-")
             prevented = after == before
@@ -235,12 +264,11 @@ def public_export(url):
             ),
             "invoices": invoices,
             "audits": {
-                value: checked(client.get(f"/api/v1/invoices/{value}/audit", auth=AUTH))
-                for value in ids
+                value: checked(client.get(f"/api/v1/invoices/{value}/audit")) for value in ids
             },
-            "vendors": checked(client.get("/api/v1/vendors", auth=AUTH)),
-            "ledger": checked(client.get("/api/v1/ledger", auth=AUTH))["items"],
-            "stats": checked(client.get("/api/v1/stats", auth=AUTH)),
+            "vendors": checked(client.get("/api/v1/vendors")),
+            "ledger": checked(client.get("/api/v1/ledger"))["items"],
+            "stats": checked(client.get("/api/v1/stats")),
         }
 
 
